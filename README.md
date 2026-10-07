@@ -25,17 +25,21 @@ connected QuickBooks Online or Xero company. Sign up at
   as PDF or Excel, and your firm's own report templates.
 - **Ramp (optional)**: read-only access to a client's Ramp business: bills,
   card transactions, reimbursements, receipts and approvals.
+- **Square (optional)**: books a client's Square sales and payouts into their
+  ledger, and manages Square customers, invoices and subscriptions.
 
-The skill tells Claude how to run these workflows. It asks before every change
-to a ledger, shows you a preview first, and keeps reads and writes in separate
-tools.
+The skill tells Claude how to run these workflows. Reads and writes are
+separate tools. Any change inside Stripe or Square is shown as a preview and
+happens only after a person confirms it. Bank-feed lines are proposed for your
+approval unless your firm chooses to let rules post them, and imports are
+dry-run first so you see every line before anything is written.
 
 ## What is in the plugin
 
 | Component | What it is |
 |---|---|
 | `skills/numbers-game-wizard/` | The Numbers Game Wizard skill (`SKILL.md` and reference files for Xero, Stripe, Ramp and two long workflows). |
-| `.mcp.json` | Two remote MCP servers: `numbers-game` at `https://mcp.numbersgame.xyz/mcp` (QuickBooks Online, Xero, bank feed, Stripe) and `numbers-game-ramp` at `https://ramp.numbersgame.xyz/mcp` (Ramp, read-only). |
+| `.mcp.json` | Three remote MCP servers: `numbers-game` at `https://mcp.numbersgame.xyz/mcp` (QuickBooks Online, Xero, bank feed, Stripe), `numbers-game-ramp` at `https://ramp.numbersgame.xyz/mcp` (Ramp, read-only) and `numbers-game-square` at `https://square.numbersgame.xyz/mcp` (Square). |
 | `assets/icon.png` | Plugin icon. |
 
 Both servers are **remote**, reached over HTTPS (streamable HTTP). The plugin
@@ -50,8 +54,9 @@ access at any time in the Numbers Game dashboard. Which companies Claude can see
 and whether it may change them, is decided by your firm's roles in Numbers Game:
 a viewer, or a company set to read-only, cannot write.
 
-The Ramp server only works for firms that have the Ramp integration switched
-on. Without it, its tools reply with `ramp_not_enabled` and change nothing.
+The Ramp and Square servers only work for firms that have that integration
+switched on, and for companies with a Ramp business or Square account
+connected. Otherwise their tools say so and change nothing.
 
 ## What data it sends, and to whom
 
@@ -61,7 +66,7 @@ The plugin itself collects nothing. Data moves only when Claude calls a tool:
   fills in (for example a company id, a date range, or the lines of a journal
   entry you asked for), plus your OAuth access token.
 - **From Numbers Game to your ledger and sources**: we call QuickBooks Online
-  (Intuit), Xero, Plaid (bank feeds), Stripe and Ramp **on your firm's behalf**,
+  (Intuit), Xero, Plaid (bank feeds), Stripe, Square and Ramp **on your firm's behalf**,
   only for the companies and sources your firm connected, and only as the tool
   call requires.
 - **Back to Claude**: the records and reports the tool returns, which may
@@ -78,11 +83,17 @@ What Numbers Game **keeps**:
   id, company id, tool name, outcome, duration and error code. It carries **no**
   ledger records, report contents, message text or personal identifiers.
 - Reports you choose to save, and generated PDFs for up to 24 hours.
+- For a connected bank feed: the bank's transactions (date, amount,
+  description, merchant and counterparty names) and each account's name and
+  last four digits. Never full account numbers, balances or bank logins.
+- For Stripe and Square: the setup your firm chose and a record of what was
+  booked, so nothing is booked twice.
 - OAuth tokens for your connected ledgers and sources, encrypted with
   AES-256-GCM.
 
-We do **not** store your ledger records, sell your data, or train AI models on
-it. Data is hosted in the EU (Oracle Cloud, Amsterdam).
+We do **not** copy your QuickBooks, Xero, Stripe, Square or Ramp records into
+our database, sell your data, or train AI models on it. Data is hosted in the
+EU (Oracle Cloud, Amsterdam).
 
 Full details, retention periods and your rights:
 **Privacy policy: <https://app.numbersgame.xyz/legal/privacy>**
