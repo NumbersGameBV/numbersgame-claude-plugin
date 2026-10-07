@@ -7,6 +7,10 @@
     "numbers-game-ramp": {
       "type": "http",
       "url": "https://ramp.numbersgame.xyz/mcp"
+    },
+    "numbers-game-square": {
+      "type": "http",
+      "url": "https://square.numbersgame.xyz/mcp"
     }
   }
 }

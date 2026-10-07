@@ -1,7 +1,7 @@
 {
   "name": "numbers-game",
   "displayName": "Numbers Game",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "QuickBooks Online and Xero bookkeeping inside Claude: month-end close, book reviews, bank feed coding, reconciliations and client reports, through the Numbers Game MCP servers and the Numbers Game Wizard skill.",
   "author": {
     "name": "Numbers Game B.V.",
@@ -11,7 +11,7 @@
   "homepage": "https://www.numbersgame.xyz",
   "repository": "https://github.com/NumbersGameBV/numbersgame-claude-plugin",
   "license": "LicenseRef-NumbersGame-Proprietary",
-  "keywords": ["quickbooks", "xero", "bookkeeping", "accounting", "month-end-close", "reconciliation", "ramp", "stripe"],
+  "keywords": ["quickbooks", "xero", "bookkeeping", "accounting", "month-end-close", "reconciliation", "ramp", "stripe", "square"],
   "icon": "./assets/icon.png",
   "documentationUrl": "https://app.numbersgame.xyz/guide",
   "supportUrl": "https://app.numbersgame.xyz/support",
