@@ -1,0 +1,21 @@
+Numbers Game Plugin for Claude — Licence
+
+Copyright (c) 2026 Numbers Game B.V. (KvK 81465688), Amsterdam, the Netherlands.
+All rights reserved.
+
+This repository (the Numbers Game Wizard skill, its reference files, the MCP
+server configuration, icon and documentation) is proprietary.
+
+You may install and use this plugin, unmodified, in Claude for the purpose of
+using the Numbers Game service. Your use of the Numbers Game service itself is
+governed by the End-User Licence Agreement at
+https://www.numbersgame.xyz/license.html.
+
+You may not copy, modify, redistribute, sublicense or sell this plugin or any
+part of it, or use it to build a competing product, without prior written
+permission from Numbers Game B.V.
+
+THE PLUGIN IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, TO THE EXTENT PERMITTED BY LAW.
+
+Contact: support@numbersgame.xyz

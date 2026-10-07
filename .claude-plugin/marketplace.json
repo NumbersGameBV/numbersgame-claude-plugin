@@ -1,0 +1,8 @@
+{
+  "name": "numbers-game",
+  "owner": { "name": "Numbers Game B.V.", "email": "support@numbersgame.xyz", "url": "https://www.numbersgame.xyz" },
+  "description": "The Numbers Game plugin for Claude.",
+  "plugins": [
+    { "name": "numbers-game", "source": "./", "description": "QuickBooks Online and Xero bookkeeping inside Claude." }
+  ]
+}

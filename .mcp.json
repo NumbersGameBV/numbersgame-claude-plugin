@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "numbers-game": {
+      "type": "http",
+      "url": "https://mcp.numbersgame.xyz/mcp"
+    },
+    "numbers-game-ramp": {
+      "type": "http",
+      "url": "https://ramp.numbersgame.xyz/mcp"
+    }
+  }
+}
