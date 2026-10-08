@@ -5,7 +5,7 @@ description: Executes month-end close, book audits, COA checks, payroll reconcil
 
 # Numbers Game Accounting — Bookkeeping Analysis Skill
 
-**Skill version: 2026.10.07.2**
+**Skill version: 2026.10.08.2**
 
 Installed skills do not update themselves. The current version is shown on the
 **Setup** page of the Numbers Game dashboard (`/app/setup`) — if the version
@@ -464,7 +464,8 @@ Ordinary updates are **sparse**: a field you leave out is left alone, never empt
 
 ### Vendor Mapping or Bank Rules Tools (per-company vendor → account memory)
 - `get_vendor_mappings` — Read this company's stored vendor → account map (vendor name, account code, account name, confidence high/low, notes, whether the vendor is never billed first or never capitalised, and the bank descriptors already known for it). **Pass `descriptors`** — the bank strings you are about to code — and the server matches them against the rules for you: ranked candidates with the evidence for each, and an explicit list of the ones that matched nothing. Consult it before classifying anything, whatever the source.
-- `upsert_vendor_mapping` — Create or update one vendor → account mapping (keyed by vendor name). Persisted in Numbers Game so future reviews book the vendor's spend to the right account. **Pass `descriptors`** to record a bank string you have just established belongs to this vendor; that is what stops the same statement line coming back as manual review every month.
+- `upsert_vendor_mapping` — Create or update one vendor → account mapping (keyed by vendor name). Persisted in Numbers Game so future reviews book the vendor's spend to the right account. It restates the WHOLE rule: anything you leave out (account, notes) is cleared. Use it to create a rule for a new vendor, passing `descriptors` with the bank string that turned out to be them.
+- `add_descriptor_aliases` — Record bank strings the user confirmed against rules that ALREADY exist, every rule in one call. It only adds: the account, confidence, notes and class stay as they are. From then on each string matches its rule exactly, on statements and on the bank feed; that is what stops the same line coming back as manual review every month. A string another rule already owns is not added, and the result names that rule.
 
 ### Task Tools (work that outlives the conversation)
 - `list_tasks` — Open work recorded for this company. Read it at the start of a session: it is where an unfinished item from last time is written down.
@@ -487,6 +488,16 @@ When the user asks for one of the firm's standard reports ("run the monthly repo
 - `get_report_run` on a template run also returns its values and a fresh download link: answer follow-up questions about an earlier report from those, without running it again.
 - A template is uploaded, checked and approved in the portal (Prompts & instructions, Report templates), not in the chat. If the tools say report templates are not switched on for the firm, write the report from the ledger's reports and store it with `start_report_run`.
 - The deliverable is the download link, in the format the user asked for (Excel or Word, PDF, Markdown, text); every format is also on the report's page in the portal.
+
+### Library Tools (the firm's prompts, instructions and report templates)
+Everyone in the firm can read its library; only an owner or admin can change it (if not, the tool says so and who can). A change is live at once unless saved as a draft, and every version is kept.
+- `list_library` / `get_library_entry` — Read the library before writing a prompt or instruction from scratch: the firm may already have one. `get_library_entry` also shows an entry's history and, for a report template, its layout as text.
+- `save_library_entry` — Create or change a prompt or instruction. It publishes at once; pass `publish: false` to leave a draft for someone to review. Publishing an instruction changes the file of every company it is attached to: tell the user which companies the result names.
+- `change_library_entry` — Publish or discard a draft, restore an earlier version, or delete. Restoring is how a mistaken change is undone.
+- `attach_instruction` — Put an instruction into this company's file, or take it out.
+- `manage_library_category`, `manage_onboarding_setup`, `manage_library_standard` — The categories, the onboarding questions and which prompts each answer selects, and the Numbers Game standard prompts (copy, hide, offer).
+- Converting the firm's own report into a template: have the user upload it (`request_attachment_upload`), create it with `create_report_template` (`file_handle`), read its layout with `get_library_entry`, then `revise_report_template` to replace each typed figure with a marker and write the Definitions, describing every value in plain words. Fix any problem the check names. Run `preview_report_template` on a real company and month, show the user the result, and `approve_report_template` only when they agree.
+- A prompt that describes a report can become a template too: `create_report_template` with a `brief` (the layout) and `definitions`.
 
 ### Slack Tools
 - `refresh_client_canvas` — Rewrite this company's Slack canvas from current data. Use after a close or a material change, so the channel's pinned summary is not stale.
@@ -537,6 +548,7 @@ round trip, and the answer was in QuickBooks all along.
 - `approve_bank_transactions` — Post lines the user has seen and confirmed: lines held on score, and lines held on a veto a person is entitled to answer
 - `set_accounting_policy` — Set this company's accounting basis, capitalization threshold, applicable-financial-statement answer, or strict bill matching. Ask the user for the value; never choose one yourself
 - `mark_plaid_transaction_ignored` / `report_bank_booking_run` / `propose_never_billed_vendors`
+- `propose_descriptor_aliases` — The feed's near misses: bank strings the feed could not code although one of the company's own rules plainly describes them, grouped by rule with the money at stake and the words that matched. Read-only. Show them to the user, and record the ones they confirm with `add_descriptor_aliases` in one call. Run it when many feed lines sit in review for want of a rule.
 
 ### When the feed holds a line
 
@@ -1153,7 +1165,7 @@ Standard package for full audit:
 Lighter version, no full report required unless issues found.
 
 1. Pull GL for the past 7 days
-2. Call `get_vendor_mappings`, passing the bank descriptions of the transactions you are reviewing as `descriptors`, and auto-categorize what it matches: an `alias` or `exact` match on a **high**-confidence rule can be booked directly; `contains` and `partial` are proposals to put to the user; **low**-confidence mappings are "needs review" rather than auto-applied. Record what you learn about anything unmatched with `upsert_vendor_mapping`, descriptor included.
+2. Call `get_vendor_mappings`, passing the bank descriptions of the transactions you are reviewing as `descriptors`, and auto-categorize what it matches: an `alias` or `exact` match on a **high**-confidence rule can be booked directly; `contains` and `partial` are proposals to put to the user; **low**-confidence mappings are "needs review" rather than auto-applied. Record what the user confirms: strings that belong to a vendor that already has a rule go to `add_descriptor_aliases`, all in one call; a new vendor gets a rule with `upsert_vendor_mapping`, descriptor included.
 3. Apply Detection Rules (focus: duplicates, miscategorizations, unusual amounts, uncategorized)
 4. If clean: "No issues found for [date range]."
 5. If issues found: present summary table, propose corrections, generate Issues Report PDF
