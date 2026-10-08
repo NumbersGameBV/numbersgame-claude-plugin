@@ -63,10 +63,15 @@ is partly booked.
     matched, and let the user confirm.
   - no match → these, and only these, are the rows to ask about. It is a short
     list, and it is the whole of the manual work.
-- **When you learn who an unmatched descriptor was, record it.**
-  `upsert_vendor_mapping` with `descriptors: ["<the bank string, verbatim>"]`.
-  Next month that row matches exactly and nobody looks at it again. Skipping
-  this is how one statement line gets reviewed by hand twelve times.
+- **When you learn who a descriptor was, record it** — the proposals the user
+  confirmed and the unmatched rows alike. If the vendor already has a rule:
+  `add_descriptor_aliases`, every confirmed row in one call; it changes nothing
+  else on the rule. If it is a new vendor: `upsert_vendor_mapping` with
+  `descriptors: ["<the bank string, verbatim>"]`. Never use
+  `upsert_vendor_mapping` just to add a descriptor: it restates the whole rule
+  and clears what you leave out. Next month that row matches exactly and nobody
+  looks at it again. Skipping this is how one statement line gets reviewed by
+  hand twelve times.
 - A rule may also carry `never_billed` (book direct, do not look for a bill) and
   `never_capital` (never treat as a capital purchase, whatever the amount).
   Those are the firm's decisions — respect them.
