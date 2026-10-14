@@ -87,9 +87,20 @@ payment on the invoice in the Stripe Dashboard.
 nothing and returns a `confirm_token`. Show the preview, including what it means
 for the books, and call again with the token only after the person confirms.
 "changed" means Stripe moved in between: show the new preview. Viewers and
-read-only companies are refused. Invoices are drafts unless the person says to
-finalize; Numbers Game never emails them. A subscription charged automatically
-charges the card now: say so before confirming.
+read-only companies are refused.
+
+**Nothing here moves money.** No Stripe tool charges a card or bank, refunds,
+or turns on automatic charging; a person does those in the Stripe Dashboard.
+`stripe_create_invoice` always makes a DRAFT, never finalized or emailed: the
+person finalizes it in the Dashboard. `stripe_create_subscription` always bills
+by emailed invoice the customer pays (it needs `days_until_due`); to charge a
+saved card instead, the person switches it in the Dashboard
+(`stripe_payment_method_status` shows whether the customer has authorized one).
+A subscription change is billed on the next regular invoice, never at once. A
+credit note's already-paid part goes to the customer's balance or is marked
+repaid outside Stripe; a refund is made in the Dashboard. On a subscription
+that already charges automatically, a change alters what Stripe charges at the
+next renewal: say so before confirming.
 
 **Void or write off?** `stripe_void_invoice` cancels an open or uncollectible
 invoice that should never have been issued (a mistake, a deal that fell
