@@ -5,7 +5,7 @@ description: Executes month-end close, book audits, COA checks, payroll reconcil
 
 # Numbers Game Accounting — Bookkeeping Analysis Skill
 
-**Skill version: 2026.10.08.3**
+**Skill version: 2026.10.14.1**
 
 Installed skills do not update themselves. The current version is shown on the
 **Setup** page of the Numbers Game dashboard (`/app/setup`) — if the version
@@ -228,7 +228,7 @@ QuickBooks Online, and **Available Tools** is the QuickBooks capability list: if
 a tool is named there, it works here, and nothing has to be read from anywhere
 else to find that out. Say what you can do from that list rather than hedging.
 
-**On a Xero company, read [reference/xero.md](reference/xero.md) before planning any workflow.** It has what works, the twenty-one tools that refuse and what to say instead, how bank feeds differ, and a dozen calls Xero words differently. Guessing from QuickBooks habits produces confident wrong answers there.
+**On a Xero company, read [reference/xero.md](reference/xero.md) before planning any workflow.** It has what works, the nineteen tools that refuse and what to say instead, how bank feeds differ, and a dozen calls Xero words differently. Guessing from QuickBooks habits produces confident wrong answers there.
 
 ---
 
@@ -423,7 +423,7 @@ That last row matters: every Bill, Invoice, Credit Memo and Vendor Credit reads 
 - `create_account` / `update_account` — Create or modify chart-of-accounts entries
 - `create_customer` / `get_customer` / `update_customer` — Manage customer records. **There is no delete**
 - `create_vendor` / `get_vendor` / `update_vendor` — Manage vendor records. **There is no delete**. Set `Vendor1099: true` and `TaxIdentifier` (the TIN/EIN) at creation for any contractor who may need a 1099 — both are ordinary fields on the vendor and both are accepted here. A contractor created without them looks correct all year and surfaces in January, when the 1099s do not generate and the payments have already been made. Ask for the TIN rather than guessing, and if it is not to hand, create the vendor and flag the missing TIN as an open item
-- `create_employee` / `get_employee` / `update_employee` — Manage employee records
+- `create_employee` / `get_employee` / `update_employee` — Manage employee records (on Xero: `get_employee` reads Xero UK Payroll; create and update refuse)
 - `create_item` / `read_item` / `update_item` — Products and services used on invoices, bills, and purchases
 
 ### The shape of a transaction line (what 2010 and 2020 actually mean)
@@ -468,6 +468,18 @@ Ordinary updates are **sparse**: a field you leave out is left alone, never empt
 - `get_vendor_mappings` — Read this company's stored vendor → account map (vendor name, account code, account name, confidence high/low, notes, whether the vendor is never billed first or never capitalised, and the bank descriptors already known for it). **Pass `descriptors`** — the bank strings you are about to code — and the server matches them against the rules for you: ranked candidates with the evidence for each, and an explicit list of the ones that matched nothing. Consult it before classifying anything, whatever the source.
 - `upsert_vendor_mapping` — Create or update one vendor → account mapping (keyed by vendor name). Persisted in Numbers Game so future reviews book the vendor's spend to the right account. It restates the WHOLE rule: anything you leave out (account, notes) is cleared. Use it to create a rule for a new vendor, passing `descriptors` with the bank string that turned out to be them.
 - `add_descriptor_aliases` — Record bank strings the user confirmed against rules that ALREADY exist, every rule in one call. It only adds: the account, confidence, notes and class stay as they are. From then on each string matches its rule exactly, on statements and on the bank feed; that is what stops the same line coming back as manual review every month. A string another rule already owns is not added, and the result names that rule.
+
+### Payroll Tools (Xero UK Payroll, read only)
+- `search_employees` / `get_employee` — on a Xero company, the payroll's employees: start and end date, whether on payroll today, employee number and the department saved for them. QuickBooks filter fields are not applied there; the result says so.
+- `report_payroll_costs` — headcount at each month end (joiners, leavers) and employer cost by month, department and employee, from posted pay runs by payment date; drafts are listed, not counted. **Employer cost = earnings + employer pension and benefits + employer National Insurance.** Xero's own pay run `totalCost` leaves employer NI out: never present it as what staff cost. Each run's `tiesToXero` checks the rest against it. At most 60 posted runs a call: for a longer history ask a year at a time and add them up.
+- `set_employee_departments` — save which department each employee is in. Xero UK Payroll does not record a department, so this is the company's own answer, saved once and reused every month. Numbers Game data: nothing is written to Xero.
+
+**Headcount and payroll cost by department, the workflow:**
+1. `search_employees`. If it refuses, relay the refusal: the organisation does not run Xero UK Payroll, or the connection needs a Payroll Administrator to Reconnect Xero. Payroll totals by account are still available from `qbo_report_profit_and_loss`.
+2. `unassignedDepartment` lists who on payroll has no saved department. Ask the user once for all of them, using the business's own department names (its tracking categories, from `search_classes`, if it books by department), and save every answer in ONE `set_employee_departments` call. Never guess a department from a job title or a name.
+3. `report_payroll_costs` for the period. Present headcount by month and employer cost by department; name anyone still under "(no department saved)" rather than leaving the split short.
+4. Where the business books payroll by tracking category, compare the department totals with `qbo_report_profit_and_loss_by_class` and explain a difference rather than hiding it: timing (payment date against period), accruals, and costs booked outside payroll are the usual causes.
+Payslips are named people's pay. Keep individual pay out of anything shared beyond the people who asked, unless the user says otherwise.
 
 ### Task Tools (work that outlives the conversation)
 - `list_tasks` — Open work recorded for this company. Read it at the start of a session: it is where an unfinished item from last time is written down.
