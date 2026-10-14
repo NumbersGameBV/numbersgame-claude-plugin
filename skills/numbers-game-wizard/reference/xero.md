@@ -145,3 +145,11 @@ because the rules exist to code a feed there is no way to read.
 - **Multi-currency:** aged reports convert at Xero's own rate. If Xero has no
   rate for an unpaid foreign invoice the report is refused rather than mixing
   currencies — report that as a data problem in Xero, not as a tool failure.
+- **Bank activity: a quarter at a time, a month for a busy account.**
+  `search_bank_transactions` reads at most 10,000 movements of each kind on the
+  account in one call. A range holding more is refused at once, with its
+  count: narrow the range and repeat, never retry the same one.
+- **Aged receivables and payables are computed from the documents, up to
+  10,000 of one type.** A bigger book is refused with a way forward: for a
+  past date, the aging as at today (open documents only), or Xero's own Aged
+  Receivables or Aged Payables Summary report, which covers any book.
