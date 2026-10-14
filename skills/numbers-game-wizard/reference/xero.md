@@ -128,9 +128,15 @@ because the rules exist to code a feed there is no way to read.
   reference, omit lines entirely.
 - **Amounts are tax-exclusive**, and the tax rate comes from the account unless
   you name a tax code on the line.
-- **No classes or departments.** Xero tracks by category *name*, not id, so
-  these are refused rather than guessed at. Do not promise class-level analysis
-  on a Xero company.
+- **Classes are tracking-category options; departments refuse.** On Xero a
+  class is an option inside a tracking category: `search_classes` lists the
+  options of every active category (each says which category it belongs to),
+  `get_class` reads one, `create_class` adds an option and never a new category,
+  `update_class` renames or archives one. `bulk_assign_classification` tags
+  bills, spend and receive money and manual journals (bank transfers and
+  reconciled lines cannot be tagged), and `qbo_report_profit_and_loss_by_class`
+  splits the P&L by a tracking category. Department tools refuse: Xero allows
+  only two tracking categories, and a new category is created in Xero itself.
 - **There is no concurrency check.** QuickBooks rejects a stale write; Xero does
   not, and the last write wins. Do not send a `SyncToken` — it is refused.
 - **Voiding:** a draft or submitted invoice becomes DELETED, an approved one

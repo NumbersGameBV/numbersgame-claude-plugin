@@ -5,7 +5,7 @@ description: Executes month-end close, book audits, COA checks, payroll reconcil
 
 # Numbers Game Accounting — Bookkeeping Analysis Skill
 
-**Skill version: 2026.10.14.1**
+**Skill version: 2026.10.14.2**
 
 Installed skills do not update themselves. The current version is shown on the
 **Setup** page of the Numbers Game dashboard (`/app/setup`) — if the version
@@ -451,6 +451,7 @@ Ordinary updates are **sparse**: a field you leave out is left alone, never empt
 - `create_class` / `get_class` / `update_class` / `search_classes`
 - `create_department` / `get_department` / `update_department` / `search_departments`
 - `bulk_assign_classification` — Preview + execute bulk ClassRef/DepartmentRef assignment
+- **On Xero:** a class is a tracking-category option and department tools refuse; see the Xero reference.
 - **Set class at creation, not afterwards.** `create_bill`, `create_purchase`, `create_deposit`, `create_invoice`, `create_journal_entry`, `create_sales_receipt`, `create_credit_memo` and `create_refund_receipt` all accept `ClassRef` and `DepartmentRef` on the line. `bulk_assign_classification` is for repairing history, not for routine posting.
 
 ### Budget Tools (QuickBooks writes; both ledgers read)
