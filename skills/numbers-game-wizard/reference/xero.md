@@ -26,7 +26,7 @@ returning the wrong rows.
 
 ### What does not, and what to say instead
 
-Twenty-one tools refuse on Xero, and they refuse **by name** with the reason —
+Nineteen tools refuse on Xero, and they refuse **by name** with the reason —
 believe the refusal, say so plainly, and offer what Xero *can* answer rather
 than rephrasing the same request into a different tool.
 
@@ -41,10 +41,16 @@ than rephrasing the same request into a different tool.
   with this vendor / customer / account", and `search_bank_transactions` for a
   bank or credit-card account, which reconstructs that account's movements and
   reconciles them against Xero's own bank summary.
-- **No employees.** Xero's Employees endpoint answers 404 for us: it keeps
-  employees in a separate Payroll API, behind scopes this connector's token does
-  not carry. Payroll questions have no answer here at all — say so. Vendors and
-  customers are both Contacts and are unaffected.
+- **Employees and payroll: Xero UK Payroll only, read only.** `search_employees`
+  and `get_employee` read Xero UK Payroll, and `report_payroll_costs` gives
+  headcount and employer cost (see Payroll Tools). Xero answers only when the
+  organisation runs Xero's UK payroll AND its connection was approved by a Xero
+  Payroll Administrator on or after 14 October 2026; otherwise the refusal says
+  which, and the fix is Reconnect Xero by a Payroll Administrator. Australian
+  and New Zealand payroll are not read. `create_employee` and `update_employee`
+  refuse: changes are made in Xero Payroll. Payroll TOTALS are always in the
+  accounts, whatever the region, through the profit and loss reports. Vendors
+  and customers are both Contacts and are unaffected.
 - **No time activities.** Xero keeps time in Xero Projects, a separate API we
   hold no scope for, so `create_time_activity`, `search_time_activities` and
   `update_time_activity` all refuse. It is not a gap retrying or reconnecting
