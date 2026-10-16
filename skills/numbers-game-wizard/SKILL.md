@@ -5,7 +5,7 @@ description: Executes month-end close, book audits, COA checks, payroll reconcil
 
 # Numbers Game Accounting — Bookkeeping Analysis Skill
 
-**Skill version: 2026.10.14.4**
+**Skill version: 2026.10.16.1**
 
 Installed skills do not update themselves. The current version is shown on the
 **Setup** page of the Numbers Game dashboard (`/app/setup`) — if the version
@@ -508,9 +508,13 @@ When the user asks for one of the firm's standard reports ("run the monthly repo
 Everyone in the firm can read its library; only an owner or admin can change it (if not, the tool says so and who can). A change is live at once unless saved as a draft, and every version is kept.
 - `list_library` / `get_library_entry` — Read the library before writing a prompt or instruction from scratch: the firm may already have one. `get_library_entry` also shows an entry's history and, for a report template, its layout as text.
 - `save_library_entry` — Create or change a prompt or instruction. It publishes at once; pass `publish: false` to leave a draft for someone to review. Publishing an instruction changes the file of every company it is attached to: tell the user which companies the result names.
-- `change_library_entry` — Publish or discard a draft, restore an earlier version, or delete. Restoring is how a mistaken change is undone.
+- `publish_library_draft` / `discard_library_draft` — Publish or throw away an entry's pending draft.
+- `revert_library_entry` — Restore an earlier version; it comes back as a new version. This is how a mistaken change is undone.
+- `delete_library_entry` — Delete a prompt or instruction. An instruction still attached to companies cannot be deleted: the refusal names them.
 - `attach_instruction` — Put an instruction into this company's file, or take it out.
-- `manage_library_category`, `manage_onboarding_setup`, `manage_library_standard` — The categories, the onboarding questions and which prompts each answer selects, and the Numbers Game standard prompts (copy, hide, offer).
+- Categories: `create_library_category`, `rename_library_category`, `delete_library_category` (only an empty one; built-in categories are fixed).
+- Onboarding and initial-checks questions (`get_onboarding_setup` lists them with their ids): `add_onboarding_question`, `rename_onboarding_question`, `delete_onboarding_question`, `add_onboarding_answer`, `rename_onboarding_answer`, `delete_onboarding_answer`, and `set_onboarding_prompt_answers` for which answers select each onboarding prompt.
+- Numbers Game standard prompts: `copy_library_standard` (the firm's own editable copy), `hide_library_standard`, `offer_library_standard`.
 - Converting the firm's own report into a template: have the user upload it (`request_attachment_upload`), create it with `create_report_template` (`file_handle`), read its layout with `get_library_entry`, then `revise_report_template` to replace each typed figure with a marker and write the Definitions, describing every value in plain words. Fix any problem the check names. Run `preview_report_template` on a real company and month, show the user the result, and `approve_report_template` only when they agree.
 - A prompt that describes a report can become a template too: `create_report_template` with a `brief` (the layout) and `definitions`.
 
