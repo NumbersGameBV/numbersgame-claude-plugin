@@ -5,7 +5,7 @@ description: Executes month-end close, book audits, COA checks, payroll reconcil
 
 # Numbers Game Accounting — Bookkeeping Analysis Skill
 
-**Skill version: 2026.10.16.1**
+**Skill version: 2026.10.16.2**
 
 Installed skills do not update themselves. The current version is shown on the
 **Setup** page of the Numbers Game dashboard (`/app/setup`) — if the version
@@ -471,7 +471,7 @@ Ordinary updates are **sparse**: a field you leave out is left alone, never empt
 - `add_descriptor_aliases` — Record bank strings the user confirmed against rules that ALREADY exist, every rule in one call. It only adds: the account, confidence, notes and class stay as they are. From then on each string matches its rule exactly, on statements and on the bank feed; that is what stops the same line coming back as manual review every month. A string another rule already owns is not added, and the result names that rule.
 
 ### Payroll Tools (Xero UK Payroll, read only)
-- `search_employees` / `get_employee` — on a Xero company, the payroll's employees: start and end date, whether on payroll today, employee number and the department saved for them. QuickBooks filter fields are not applied there; the result says so.
+- `search_employees` / `get_employee` — on a Xero company, the payroll's employees: start and end date, whether on payroll today, employee number and the department saved for them. `search_employees` applies `Id`, `DisplayName`, `GivenName`, `FamilyName` and `Active` (on payroll today) there, so ask for the person you need rather than reading the whole payroll; other QuickBooks fields are not held by payroll, and the result names any it could not apply.
 - `report_payroll_costs` — headcount at each month end (joiners, leavers) and employer cost by month, department and employee, from posted pay runs by payment date; drafts are listed, not counted. **Employer cost = earnings + employer pension and benefits + employer National Insurance.** Xero's own pay run `totalCost` leaves employer NI out: never present it as what staff cost. Each run's `tiesToXero` checks the rest against it. At most 60 posted runs a call: for a longer history ask a year at a time and add them up.
 - `set_employee_departments` — save which department each employee is in. Xero UK Payroll does not record a department, so this is the company's own answer, saved once and reused every month. Numbers Game data: nothing is written to Xero.
 
