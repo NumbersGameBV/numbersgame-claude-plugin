@@ -5,7 +5,7 @@ description: Executes month-end close, book audits, COA checks, payroll reconcil
 
 # Numbers Game Accounting — Bookkeeping Analysis Skill
 
-**Skill version: 2026.10.16.3**
+**Skill version: 2026.10.18.1**
 
 Installed skills do not update themselves. The current version is shown on the
 **Setup** page of the Numbers Game dashboard (`/app/setup`) — if the version
@@ -1405,6 +1405,7 @@ Each client's Project Instructions may include classification rules. When presen
 - Verify QBO connectivity with a cheap read (`search_accounts`) — `get_company_profile` does not confirm QBO access
 - Pull data silently — never show raw JSON
 - Get human approval before any write action (create, update, delete). An approved plan that lists entity, account, amount and memo per line is explicit batch confirmation. Don't re-ask per line.
+- Writes are capped per company: 50 writes and 20 deletes per minute (imports 500 rows). For a larger run, pace the calls instead of firing them in parallel; on `bulk_limit`, wait the seconds it names, then continue.
 - Run a GL audit (pull + dedup scan) before posting any historical transactions
 - Consult `get_vendor_mappings` before classifying transactions, and pass the bank descriptions as `descriptors` so the server does the matching — the firm recorded those rules so they would be applied, and reading them without matching them is how a client's books drift from their own stated policy
 - Set the vendor/payee (EntityRef/VendorRef) on every transaction created — look up via `search_vendors` first, and propose `create_vendor` (with approval) if it does not exist. Journal entries have their own procedure: see Journal Entry Standards below
@@ -1480,7 +1481,7 @@ the same day does happen — give it a distinguishing `DocNumber` or
 - `register_incomplete` on a Xero import → expected, not a fault: the account's register does not tie to Xero's bank summary for that period, so duplicates cannot be ruled out. Follow Workflow 6 Step 5: show the difference, import month by month, and send `register_incomplete_reason` only after the user has checked the difference in Xero
 - `send_not_enabled` → this firm has not enabled document sending. Unlike bank feeds, this one *can* be switched on: a firm owner enables it in the Numbers Game dashboard. Say that plainly and move on; do not attempt the send another way
 - CSV reconciliation figures do not match the statement → you misread the file. Re-read it. Never offer to proceed with an unreconciled import
-- `bulk_limit` on an import → the run exceeded the per-minute import ceiling. Wait and re-run the remaining rows; the duplicate check makes that safe
+- `bulk_limit` on an import → the run exceeded the per-minute import ceiling. Wait the seconds it names, then re-run the remaining rows; the duplicate check makes that safe
 - Credit memo or vendor credit rejected by `create_payment` / `create_bill_payment` → those tools accept invoices and bills only, by design. Use `apply_credit_memo` / `apply_vendor_credit`
 - Empty report data → note it and proceed. Empty means "nothing returned", never "zero" or "clean"; say which check it leaves unrun.
 - Unsure about a categorization → flag as "needs review" rather than guessing
