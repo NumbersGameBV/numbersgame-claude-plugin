@@ -5,7 +5,7 @@ description: Executes month-end close, book audits, COA checks, payroll reconcil
 
 # Numbers Game Accounting — Bookkeeping Analysis Skill
 
-**Skill version: 2026.10.19.3**
+**Skill version: 2026.10.19.4**
 
 Installed skills do not update themselves. The current version is shown on the
 **Setup** page of the Numbers Game dashboard (`/app/setup`) — if the version
@@ -540,6 +540,7 @@ Everyone in the firm can read its library; only an owner or admin can change it 
 - `search_accounts` — Chart-of-accounts lookup (also serves as the QBO connectivity check)
 - `search_help` / `get_help_article` — Numbers Game's own help center (SOPs, help pages, prompts, this skill), not the books. For "how do I…" questions; see **When the user asks how to use Numbers Game**
 - `get_purchase` / `get_deposit` / `get_transfer` / `get_journal_entry`
+- **To read many records, use one search, not many `get_` calls.** Pass their ids to that type's `search_` tool as `criteria: [{field: "Id", operator: "IN", value: [the ids]}]`, and make QuickBooks calls one at a time rather than in parallel: QuickBooks rate-limits a parallel burst (code 3001). Customer payments have no search tool; list them with `search_bank_transactions` on the account they were received into.
 
 ### Bank Feed Tools — the booking pipeline, not a place to read from
 
