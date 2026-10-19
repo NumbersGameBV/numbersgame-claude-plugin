@@ -116,9 +116,10 @@ because the rules exist to code a feed there is no way to read.
 - **An invoice needs a due date.** Xero has no payment terms to fall back on.
   Ask the user for one; do not use the invoice date, which means "due on
   receipt" and moves the invoice out of Current on every aging report.
-- **Items and accounts need a code.** `sku` and `acct_num` are required. Ask
-  rather than inventing one — a made-up code goes into the client's chart of
-  accounts and stays there.
+- **Items and accounts need a code.** `sku` and `acct_num` are required, except
+  for a bank account: Xero needs its `bank_account_number` (as the bank prints
+  it) instead, and `acct_num` is optional there. Ask rather than inventing any of
+  these — a made-up code goes into the client's chart of accounts and stays there.
 - **Customers and suppliers are one record.** Xero decides which a contact is
   from the documents posted against it. If you have both a display name and a
   company name and they differ, ask which to keep; sending both is refused.
