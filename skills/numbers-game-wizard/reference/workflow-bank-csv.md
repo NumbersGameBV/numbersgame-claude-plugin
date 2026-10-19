@@ -3,6 +3,7 @@
 ## Contents
 - Step 1 — Know what is already there
 - Step 2 — Parse and map
+- Card platform exports (Ramp, Brex, expense tools)
 - Step 3 — Code every row
 - Step 4 — Prove you read the file correctly, then preview
 - Step 5 — Dry run
@@ -49,6 +50,32 @@ is partly booked.
 - Confirm which QuickBooks bank or card account this statement belongs to via
   `search_accounts`. Never guess it from the file name.
 
+### Card platform exports (Ramp, Brex, expense tools)
+
+A card platform's transaction export is a list of transactions, not a
+statement. Four things follow:
+
+- **No balances.** The export prints no opening or closing balance. For Step 4,
+  ask the user for the statement's own opening balance, closing balance and row
+  count; never work them out from the export's rows, or the check proves nothing.
+- **One date column, every month.** Use the transaction date, never a settlement
+  or posted date, and the same column every month, so no row moves across a
+  period edge.
+- **`description` is the merchant column alone, verbatim.** The category,
+  cardholder, receipt notes and the platform's own GL or account column go in
+  `memo`. Never join columns: the company's rules and its posting history match
+  on the exact string, so `Anthropic - SaaS - J. Smith` is a different vendor
+  from `Anthropic`, and from the same merchant on another cardholder. Choosing
+  the account from the platform's GL column is fine; the description stays the
+  merchant.
+- **Refunds and repayments.** A refund on the card is money in: a `Deposit`. A
+  card **repayment** is usually already booked from the bank account it was paid
+  from, and importing it here too counts it twice. Show the user the repayments
+  separately and check the bank side before importing any.
+
+Establish the sign convention from the data, as above; do not carry it over from
+another export.
+
 ### Step 3 — Code every row
 
 - **Call `get_vendor_mappings` once, with `descriptors` set to every bank
@@ -86,6 +113,8 @@ is partly booked.
   reconciling against the statement matches on that exact string and an auditor
   expects to find it. Anything you determined goes in `memo`, which is appended
   after it rather than over it.
+  When the file splits the description over several columns, as a card platform
+  export does, this is the merchant column alone (see Card platform exports).
 
 ### Step 4 — Prove you read the file correctly, then preview
 
