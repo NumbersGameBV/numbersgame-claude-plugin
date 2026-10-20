@@ -5,7 +5,7 @@ description: Executes month-end close, book audits, COA checks, payroll reconcil
 
 # Numbers Game Accounting — Bookkeeping Analysis Skill
 
-**Skill version: 2026.10.20.2**
+**Skill version: 2026.10.20.3**
 
 Installed skills do not update themselves. The current version is shown on the
 **Setup** page of the Numbers Game dashboard (`/app/setup`) — if the version
@@ -416,7 +416,8 @@ That last row matters: every Bill, Invoice, Credit Memo and Vendor Credit reads 
 
 ### Bulk Posting
 
-- `bulk_create_transactions` — Post many `Purchase` and `Deposit` rows in one call, used by the bank CSV import workflow (Workflow 6). Supports `dry_run` for a validation pass that posts nothing. Returns an **import run id**. Never call this outside Workflow 6.
+- `bulk_create_transactions` — Post many `Purchase` and `Deposit` rows in one call, used by the bank CSV import workflow (Workflow 6). Supports `dry_run` for a validation pass that posts nothing. Returns an **import run id**. A large import may return `status: "posting"` and keep going: check it with `get_csv_import_run`. Never call this outside Workflow 6, and never send the same file again, while it posts or after.
+- `get_csv_import_run` — The progress and result of a statement import, by its run id, while it posts and after. Read-only. Call it until the status is `complete`, waiting `check_again_in_seconds` between calls.
 - `reverse_csv_import` — Undo an entire import by its run id. This is the only clean way back from a bad import: without it, every posted row has to be removed by hand in the QuickBooks UI. Always give the user the run id after an import, and offer this rather than manual cleanup when something is wrong.
 - `list_held_statement_lines` — Statement lines an import HELD instead of posting, because the coding check flagged them and nobody had answered yet. They are on the statement and not yet in the books, and they stay held across conversations until resolved. Grouped per import, re-checked now, each saying what clears it: `an_answer`, `its_own_answer` (a sentence about that line), `a_fix` (recode or dismiss), or `nothing`.
 - `resolve_statement_lines` — Post (approve, optionally recoding the category, vendor or class) or dismiss held statement lines, many in one call. Each line is checked again and looked for in the register before it posts. A line that needs its own answer takes only that decision's own `reason`, never the batch `reason`. Dismiss needs a reason (for example, already entered by hand). Only resolve what the user decided.

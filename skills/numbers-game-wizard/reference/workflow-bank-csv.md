@@ -151,6 +151,17 @@ On a **Xero** company the dry run may also say **REGISTER INCOMPLETE**: the tran
 
 Call `bulk_create_transactions` with `dry_run: false`. It chunks internally. Pass the user's answer to the flagged rows as `vetoes_reviewed` (one sentence for the import, e.g. "reviewed the flagged rows with the user; post as shown"), and `veto_reason` on each row the dry run marked `needs: its_own_answer`: a capital purchase, or a payment with no open bill under strict bill matching, which only an answer about that row clears. A flagged row nobody answered is **held**, not posted: it is kept with the import, the statement check still counts it, and the result says the statement is not complete in the books until it is resolved with `resolve_statement_lines`. Tell the user which rows are held and why. On Xero, a post refused as `register_incomplete` is the Step 5 case: go back to the user with the difference rather than retrying.
 
+**A large import may still be posting when the call returns.** `bulk_create_transactions` waits up to 45 seconds for its rows. A larger import keeps posting on its own: on Xero that is about a second a row, so anything past roughly 40 rows. The result then says `status: "posting"` with the import run id and `check_again_in_seconds`. Tell the user it is still posting. Then call `get_csv_import_run` with that run id after the stated wait, and again until its status is `complete`, and report that result exactly as you would the import's own. While it is posting, the answer gives progress only; the rows come once it has finished.
+
+**Never send the file again, while it posts or after.** A second import onto the same account is refused while one is posting (`import_in_progress`). If it is your firm's import, the refusal names the run to check. If it is another firm's import on a company you share, it gives no run id; your call wrote nothing, so call again once that import has finished. Once an import is complete, every row it did not post is either **held** or **failed**:
+- **A failed row** is a refusal. Fix the cause and post that row on its own with `create_deposit` or `create_purchase`.
+- **A held row that was never sent** posts through `resolve_statement_lines`, which first re-reads the register for an entry made since.
+- **A held row that may already be in the books** was being sent when the import stopped, or its write got no complete answer. `resolve_statement_lines` will not post it until 15 minutes after it was held. Until then it answers `still_held` with the UTC time to try again. After that it re-reads the register and reports the row as a possible duplicate if the ledger took it. Never post such a row by hand.
+
+**When `resolve_statement_lines` answers `still_held`, it is not a failure.** Read its reason. If the reason gives a time, wait until then and approve again. Do not post the line any other way.
+
+**A status of `interrupted`** means the import stopped early: a server restart, a ledger call that did not answer in time, or an unexpected error. Every row it had not posted is held with its reason, as above. Tell the user which rows are which.
+
 Report the outcome per row. **If some rows failed, say so plainly and list
 them** — a partial import is the dangerous outcome, because re-running the file
 to "fix" it double-posts everything that already succeeded. If rows failed,
