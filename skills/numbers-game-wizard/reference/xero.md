@@ -23,6 +23,16 @@ returning the wrong rows.
 - **Read:** a customer, supplier, invoice or item in full.
 - **Write:** create and update contacts, create and update invoices, create
   bills, create items and accounts, void an invoice.
+- **Repeating invoices (Xero only):** `list_repeating_invoices` and
+  `get_repeating_invoice` read the templates, with each one's schedule, lines
+  and history; deleted ones are hidden unless asked for.
+  `create_repeating_invoice` creates a SALES template, weekly or monthly, as a
+  draft unless the user wants each invoice approved (AUTHORISED).
+  `delete_repeating_invoice` stops one and returns it in full. Xero's API
+  cannot edit or pause a template, and cannot create a repeating bill: say it
+  is Xero's limit, then offer to delete and recreate it, or tell the user to
+  change it in Xero itself. Emailing what a template generates is switched on
+  by a person in Xero; never say the tool sends anything.
 
 ### What does not, and what to say instead
 
