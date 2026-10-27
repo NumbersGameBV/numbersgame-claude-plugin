@@ -1,12 +1,12 @@
-# Numbers Game for Claude
+# NumbersGame for Claude
 
 QuickBooks Online and Xero bookkeeping, done inside Claude. This plugin bundles
-the **Numbers Game Wizard** skill with the **Numbers Game MCP servers**, so
+the **NumbersGame Wizard** skill with the **NumbersGame MCP servers**, so
 Claude can read and (with your confirmation) write to the books of the
-companies your firm has connected to Numbers Game.
+companies your firm has connected to NumbersGame.
 
-Numbers Game is a service for accounting firms and finance teams, operated by
-Numbers Game B.V. (Amsterdam). You need a Numbers Game account with at least one
+NumbersGame is a service for accounting firms and finance teams, operated by
+Numbers Game B.V. (Amsterdam). You need a NumbersGame account with at least one
 connected QuickBooks Online or Xero company. Sign up at
 <https://app.numbersgame.xyz>.
 
@@ -38,7 +38,7 @@ dry-run first so you see every line before anything is written.
 
 | Component | What it is |
 |---|---|
-| `skills/numbers-game-wizard/` | The Numbers Game Wizard skill (`SKILL.md` and reference files for Xero, Stripe, Ramp and two long workflows). |
+| `skills/numbers-game-wizard/` | The NumbersGame Wizard skill (`SKILL.md` and reference files for Xero, Stripe, Ramp and two long workflows). |
 | `.mcp.json` | Three remote MCP servers: `numbers-game` at `https://mcp.numbersgame.xyz/mcp` (QuickBooks Online, Xero, bank feed, Stripe), `numbers-game-ramp` at `https://ramp.numbersgame.xyz/mcp` (Ramp, read-only) and `numbers-game-square` at `https://square.numbersgame.xyz/mcp` (Square). |
 | `assets/icon.png` | Plugin icon. |
 
@@ -49,9 +49,9 @@ are no package versions to pin. The skill contains no scripts.
 ## Sign-in and permissions
 
 Each server signs you in with OAuth 2.0 the first time Claude uses it: you log
-in to Numbers Game and approve access on our consent screen. You can revoke
-access at any time in the Numbers Game dashboard. Which companies Claude can see,
-and whether it may change them, is decided by your firm's roles in Numbers Game:
+in to NumbersGame and approve access on our consent screen. You can revoke
+access at any time in the NumbersGame dashboard. Which companies Claude can see,
+and whether it may change them, is decided by your firm's roles in NumbersGame:
 a viewer, or a company set to read-only, cannot write.
 
 The Ramp and Square servers only work for firms that have that integration
@@ -62,10 +62,10 @@ connected. Otherwise their tools say so and change nothing.
 
 The plugin itself collects nothing. Data moves only when Claude calls a tool:
 
-- **From Claude to Numbers Game**: the tool name and the arguments Claude
+- **From Claude to NumbersGame**: the tool name and the arguments Claude
   fills in (for example a company id, a date range, or the lines of a journal
   entry you asked for), plus your OAuth access token.
-- **From Numbers Game to your ledger and sources**: we call QuickBooks Online
+- **From NumbersGame to your ledger and sources**: we call QuickBooks Online
   (Intuit), Xero, Plaid (bank feeds), Stripe, Square and Ramp **on your firm's behalf**,
   only for the companies and sources your firm connected, and only as the tool
   call requires.
@@ -74,7 +74,7 @@ The plugin itself collects nothing. Data moves only when Claude calls a tool:
   descriptions. They pass through Anthropic under Anthropic's own privacy
   terms.
 
-What Numbers Game **keeps**:
+What NumbersGame **keeps**:
 
 - A usage record per tool call (firm, company, tool name, success or failure,
   duration, error code, time) for billing, support and abuse detection, plus an
@@ -112,7 +112,7 @@ Proprietary. See [LICENSE](LICENSE).
 
 ## Keeping the skill current (maintainers)
 
-The skill's master copy lives in the Numbers Game app. `scripts/render-skill.ts`
+The skill's master copy lives in the NumbersGame app. `scripts/render-skill.ts`
 regenerates `skills/numbers-game-wizard/` from the published seed, with no firm
 customisation. After each skill publish, re-run it, bump `version` in
 `.claude-plugin/plugin.json`, and commit.

@@ -1,11 +1,11 @@
 # Ramp — a separate, read-only connector
 
 Some clients run their bills and company cards in **Ramp**. Their Ramp business is
-linked to the Numbers Game company on the Companies screen, and the company's .md
+linked to the NumbersGame company on the Companies screen, and the company's .md
 file then has a **Ramp (read-only)** section naming the Ramp business and entity.
 
-- **Two connectors, two systems.** Ramp data comes from the **Numbers Game – Ramp**
-  connector; the books come from the Numbers Game connector. Pass the same realm_id
+- **Two connectors, two systems.** Ramp data comes from the **NumbersGame – Ramp**
+  connector; the books come from the NumbersGame connector. Pass the same realm_id
   to both. Every Ramp tool's name starts with ramp_ or names Ramp; a Ramp bill
   and a ledger bill are different records, so say which system each figure comes from.
 - **Ramp is not the books.** A Ramp bill can be approved and paid in Ramp before
@@ -22,7 +22,7 @@ file then has a **Ramp (read-only)** section naming the Ramp business and entity
   to review with the client, not conclusions.
 - **Setup questions.** `list_ramp_entities` shows each Ramp entity's mapping to the
   ledger; a missing mapping or an unlinked vendor is the usual cause of a sync gap.
-- **No Ramp tools in the conversation?** The user has not added the Numbers Game –
-  Ramp connector in Claude yet; its address is on the Setup page in Numbers Game.
+- **No Ramp tools in the conversation?** The user has not added the NumbersGame –
+  Ramp connector in Claude yet; its address is on the Setup page in NumbersGame.
   A company without a Ramp section in its .md file is not linked to Ramp.
 - **Ramp accounts receivable** has no API: customer invoices are in the ledger only.

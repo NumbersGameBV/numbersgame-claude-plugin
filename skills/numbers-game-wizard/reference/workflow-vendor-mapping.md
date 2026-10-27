@@ -2,7 +2,7 @@
 
 **Trigger:** Run this when the user says "vendor mapping", "vendor map", or "Bank rules". Typically run once right after onboarding so future weekly reviews can auto-categorize known vendors.
 
-This workflow learns each vendor's usual account from QBO history and stores it in the Numbers Game vendor-mapping table via `upsert_vendor_mapping`, so future transaction classification books each vendor's spend to the right account. Mappings are read back by `get_vendor_mappings` during the weekly review — they live in Numbers Game, **not** in any external database.
+This workflow learns each vendor's usual account from QBO history and stores it in the NumbersGame vendor-mapping table via `upsert_vendor_mapping`, so future transaction classification books each vendor's spend to the right account. Mappings are read back by `get_vendor_mappings` during the weekly review — they live in NumbersGame, **not** in any external database.
 
 ### Step 1 — Pull ~6 months of QBO transaction history
 Include realm_id (from the project's COMPANYNAME.md) in every call.
@@ -60,7 +60,7 @@ the other alone.
 
 ### Step 4 — Store each mapping via `upsert_vendor_mapping`
 
-Process vendors in order: HIGH first, then INCONSISTENT, then LOW. The Numbers Game table supports two confidence levels (`high` / `low`), so map the usage pattern as follows:
+Process vendors in order: HIGH first, then INCONSISTENT, then LOW. The NumbersGame table supports two confidence levels (`high` / `low`), so map the usage pattern as follows:
 
 | Usage pattern | `confidence` | `notes` |
 |---------------|--------------|---------|
