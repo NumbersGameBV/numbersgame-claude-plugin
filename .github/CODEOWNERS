@@ -1,0 +1,14 @@
+# Who must approve what (NUM-389, owner 2026-10-27).
+#
+# The process: a pull request is opened by saginova-stack (the automation
+# account on the production host), assigned to mjanssen19, approved and merged
+# by mjanssen19. This file makes GitHub request mjanssen19's review on every
+# pull request automatically, so none depends on someone remembering to.
+#
+# BOTH ACCOUNTS ARE OWNERS ON PURPOSE, as in numbersgame-app: GitHub does not
+# let an author approve their own pull request, so with both the enforced
+# property is that the author is not the approver.
+#
+# The matching ruleset ("protect main") is versioned in saginova-stack/serversetup,
+# github-rulesets/.
+*    @mjanssen19 @saginova-stack
