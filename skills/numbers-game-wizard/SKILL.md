@@ -5,7 +5,7 @@ description: Executes month-end close, book audits, COA checks, payroll reconcil
 
 # Numbers Game Accounting — Bookkeeping Analysis Skill
 
-**Skill version: 2026.10.20.3**
+**Skill version: 2026.10.27.1**
 
 Installed skills do not update themselves. The current version is shown on the
 **Setup** page of the Numbers Game dashboard (`/app/setup`) — if the version
@@ -559,10 +559,26 @@ can fix by reconnecting. Do not present it as a feature they can switch on.
 about what is on an account is answered from QuickBooks (`search_bank_transactions`,
 see "Where bank data comes from"), whether or not a feed exists. Reach for
 `list_plaid_accounts` only once the user has asked to update, code or book the
-bank -- on a firm without the feed, calling it first is a refusal and a wasted
-round trip, and the answer was in QuickBooks all along.
+bank, or for an account's balance (below) -- on a firm without the feed, calling it
+first for anything else is a refusal and a wasted round trip, and the answer was
+in QuickBooks all along.
 
-- `list_plaid_items` / `list_plaid_accounts` — Which banks and accounts are connected to this company
+**An account's balance: the books first, the bank beside it.** Answer a balance
+question from the ledger, as above. Where the company has bank connections,
+`list_plaid_accounts` also gives each account the bank's own balance as Plaid last
+saw it (`balance`, with `as_of`, about daily, at no cost): add it beside the book
+balance as "per the bank, as of <date>", with the difference, which is what is not
+yet reconciled. On a credit card or loan the bank's `current` is the amount owed.
+Only when the user then asks for a live, right-now bank balance, use
+`refresh_live_bank_balance`. Its first call returns the cached balance and a
+`confirm_token` and uses nothing; call again with the token only when they confirm.
+Each company has 10 live refreshes per calendar month (UTC), one per bank login,
+the same for every firm, and every answer says how many are left and when they
+reset. With none left, say when they come back and give the cached balance; there
+is no way to get more, so do not offer one.
+
+- `list_plaid_items` / `list_plaid_accounts` — Which banks and accounts are connected to this company, with each account's bank balance as Plaid last saw it (`as_of`)
+- `refresh_live_bank_balance` — One bank login's balance fetched live from the bank, only when the user asks for it: first call previews (cached balance + `confirm_token`, nothing used), the second, confirmed call fetches. 10 per company per month
 - `plaid_sync_status` — Per-bank freshness: `last_synced_at`, `needs_reauth`, `error_code`, `lifecycle_state`
 - `search_plaid_transactions` / `plaid_transactions_summary` — The bank feed itself
 - `propose_bank_coding` / `preview_bulk_classification` — Proposed coding for unbooked lines
