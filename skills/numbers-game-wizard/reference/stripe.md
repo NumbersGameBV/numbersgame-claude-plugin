@@ -129,6 +129,6 @@ with both figures. Never "fix" one with a plug entry.
 
 - Other currencies are held, not booked.
 - Refunds are made in Stripe.
-- A permission refusal saying the account has not granted Numbers Game a
+- A permission refusal saying the account has not granted NumbersGame a
   permission: an administrator of the client's Stripe account accepts the
-  updated app permissions (Settings → Installed apps → Numbers Game Books).
+  updated app permissions (Settings → Installed apps → NumbersGame Books).

@@ -92,7 +92,7 @@ documents.
 **It depends entirely on how the bank reaches the books, and the two cases are
 completely different.**
 
-- **Bank connected through Numbers Game (Plaid).** The full bank-feed toolset
+- **Bank connected through NumbersGame (Plaid).** The full bank-feed toolset
   works, exactly as on QuickBooks: propose, book, hold, reverse. A line becomes
   a spend or receive-money transaction, a bank transfer, or a payment against a
   bill or invoice.
@@ -104,7 +104,7 @@ completely different.**
 
 If the client is in the second case, do not offer to code their feed and do not
 imply the connector is incomplete. Say plainly that automated bank coding needs
-the bank connected through Numbers Game, and that **QuickBooks has the same
+the bank connected through NumbersGame, and that **QuickBooks has the same
 limitation** — Intuit does not expose its For Review queue either. That is why
 the bank connection exists as a product at all.
 
@@ -118,7 +118,7 @@ parts you are skipping rather than producing a close report that looks complete.
 **Workflow 6 (Import a Bank CSV)** uses the transaction list to preview and to
 verify, so it does not apply on Xero. **Workflow 5 (bank-rule enrichment)**
 follows the same split as the bank feed itself: it is worth doing when the bank
-comes through Numbers Game, and pointless when it feeds straight into Xero,
+comes through NumbersGame, and pointless when it feeds straight into Xero,
 because the rules exist to code a feed there is no way to read.
 
 ### Xero specifics that change how you word a call

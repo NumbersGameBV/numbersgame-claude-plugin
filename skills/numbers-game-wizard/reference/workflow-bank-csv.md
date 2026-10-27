@@ -20,7 +20,7 @@ bank feed tools instead — they carry duplicate protection this workflow has to
 enforce by hand.
 
 **You read the file. The server never sees it.** The CSV is in this
-conversation, not on the Numbers Game server. Parse it here, and send only
+conversation, not on the NumbersGame server. Parse it here, and send only
 structured rows to QuickBooks.
 
 ### Step 1 — Know what is already there
@@ -145,7 +145,7 @@ issued anyway is how partial imports happen.
 
 The dry run also runs every row through the same coding check as the bank feed: the company's bank rules, open bills a payment should settle, capital purchases, payroll and the rest. Each row carries `engine` (a score, `vetoes` and their reasons, the account the company's rule names when it differs from yours), and rows that would be **held** say why (`held_because`) and what clears them (`needs`). **Show the user every flagged row before posting**, fix what they agree with, and collect their answers. The score is information only: it never holds a row. If a row is held for `basis_not_set`, ask the user whether the company is on a cash or an accrual basis and set it with `set_accounting_policy`; never choose it yourself.
 
-On a **Xero** company the dry run may also say **REGISTER INCOMPLETE**: the transactions Numbers Game can read on that account do not add up to Xero's own bank summary for the period, usually because of a Receipt or an Expense Claim that Xero does not let the connector read. The duplicate check cannot see that difference, so posting will be refused (`register_incomplete`). Show the user both totals and the difference. Suggest importing month by month first: only the months holding the unseen item are refused, and the rest post normally. For a month that still reports it, the user looks in Xero for an item of that difference; only once they confirm none of the statement rows is it, post with `register_incomplete_reason` saying what they checked. Never send it pre-emptively, and never on your own judgement.
+On a **Xero** company the dry run may also say **REGISTER INCOMPLETE**: the transactions NumbersGame can read on that account do not add up to Xero's own bank summary for the period, usually because of a Receipt or an Expense Claim that Xero does not let the connector read. The duplicate check cannot see that difference, so posting will be refused (`register_incomplete`). Show the user both totals and the difference. Suggest importing month by month first: only the months holding the unseen item are refused, and the rest post normally. For a month that still reports it, the user looks in Xero for an item of that difference; only once they confirm none of the statement rows is it, post with `register_incomplete_reason` saying what they checked. Never send it pre-emptively, and never on your own judgement.
 
 ### Step 6 — Post
 
