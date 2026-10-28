@@ -42,9 +42,9 @@ dry-run first so you see every line before anything is written.
 | `.mcp.json` | Three remote MCP servers: `numbers-game` at `https://mcp.numbersgame.xyz/mcp` (QuickBooks Online, Xero, bank feed, Stripe), `numbers-game-ramp` at `https://ramp.numbersgame.xyz/mcp` (Ramp, read-only) and `numbers-game-square` at `https://square.numbersgame.xyz/mcp` (Square). |
 | `assets/icon.png` | Plugin icon. |
 
-Both servers are **remote**, reached over HTTPS (streamable HTTP). The plugin
+All three servers are **remote**, reached over HTTPS (streamable HTTP). The plugin
 starts no local processes and ships no `npx`, `uvx` or other launcher, so there
-are no package versions to pin. The skill contains no scripts.
+are no package versions to pin. The plugin contains no scripts or other code.
 
 ## Sign-in and permissions
 
@@ -112,7 +112,8 @@ Proprietary. See [LICENSE](LICENSE).
 
 ## Keeping the skill current (maintainers)
 
-The skill's master copy lives in the NumbersGame app. `scripts/render-skill.ts`
-regenerates `skills/numbers-game-wizard/` from the published seed, with no firm
-customisation. After each skill publish, re-run it, bump `version` in
+The skill's master copy lives in the NumbersGame app. The app's
+`scripts/render-claude-plugin.ts` regenerates `skills/numbers-game-wizard/` from
+the published seed, with no firm customisation. After each skill publish, run it
+from the app root against this checkout, bump `version` in
 `.claude-plugin/plugin.json`, and commit.
