@@ -5,7 +5,7 @@ description: Executes month-end close, book audits, COA checks, payroll reconcil
 
 # NumbersGame Accounting — Bookkeeping Analysis Skill
 
-**Skill version: 2026.10.31.3**
+**Skill version: 2026.10.31.4**
 
 Installed skills do not update themselves. The current version is shown on the
 **Setup** page of the NumbersGame dashboard (`/app/setup`) — if the version
@@ -364,6 +364,9 @@ file.
 - `apply_credit_memo` — Apply an existing credit memo to one or more open invoices. This is the second half of every credit memo. It reports whether the A/R aging actually moved; if it did not, the credit did not land, and you must say so rather than treating the tool's success as the answer.
 - `unapply_credit_memo` — Take a credit note back off an invoice on **Xero**, returning the credit unspent and the invoice to AUTHORISED with its full amount owing. Name the credit note and the invoice; a credit spread over several invoices loses only the one you name. This is how an invoice blocked from voiding by a credit note gets voided. On QuickBooks it refuses by name: there the application is a Payment carrying both documents, so `void_payment` on that Payment is the undo.
 - `create_refund_receipt` / `get_refund_receipt` / `search_refund_receipts` / `update_refund_receipt` / `delete_refund_receipt` — Money actually returned to a customer. A refund receipt is its own document, not a reversal of a sales receipt.
+- **Recurring invoices:** `list_repeating_invoices` / `get_repeating_invoice` / `create_repeating_invoice` / `delete_repeating_invoice` work on QuickBooks as well as Xero (Xero's details are in reference/xero.md). On QuickBooks, create needs a `name`, unique in the company. It always makes QuickBooks' Scheduled type, so each invoice posts to the books and AR on its date (QuickBooks has no draft invoices). Due dates follow the customer's terms; `due_date`, `due_date_type` and `status` are Xero only. Neither ledger can pause or edit a template through the API: say so, then tell the user to pause or change it in QuickBooks or Xero itself, or delete it and create the new version (delete returns the template in full).
+- `get_document_pdf` — QuickBooks' own PDF of an invoice or estimate, with the company's template and logo. Pass `type` (`invoice` or `estimate`) and `id`, the QuickBooks Id, not the document number. Returns a download link for the user, valid 24 hours, and an `att_` handle for `upload_attachable`, valid 1 hour. Read-only. On Xero it refuses with the way to get the PDF in Xero.
+- **Duplicating an invoice or estimate:** there is no copy tool. Read the original (`read_invoice` / `get_estimate`) and create a new one with `create_invoice` / `create_estimate` from its customer and lines, leaving out `Id`, `SyncToken`, `DocNumber` and each line's `Id`. Show it for approval like any other create.
 
 ### Purchase Documents (write — vendor-side)
 
@@ -413,6 +416,7 @@ That last row matters: every Bill, Invoice, Credit Memo and Vendor Credit reads 
 - `send_invoice_email` / `send_estimate_email` / `send_purchase_order` / `send_sales_receipt` / `send_credit_memo` — QuickBooks emails the document, from the client's own QuickBooks sending identity and template. **This is the only category of action in this skill that a third party sees, and nothing can undo it.** Sending is off unless the firm has enabled it; where it is off the tools return `send_not_enabled`. Where it is on, **your approval is the only check on an address already on file**: a send to the customer's or vendor's address, unchanged, goes straight out. The server refuses recipient fields (`BillEmail`, `BillEmailCc`, `BillEmailBcc`, `POEmail`) on every write (`recipient_field_refused`), and a send to an address changed or typed here (an updated customer or vendor email, or the optional `send_to`, which replaces the address on file) is held with `recipient_unconfirmed` until a person confirms it in NumbersGame → Firm settings → Document sending → Recipients. A typo in `send_to` is held, not sent; check the address with the user anyway. Read the sending rules under Always/Never before using any of these.
 - **A successful reply means QuickBooks ACCEPTED the send, not that the mail arrived.** `EmailStatus=EmailSent` and the `DeliveryInfo` timestamp are both written the instant Intuit takes the request, before anything leaves; the mail is queued and goes out afterwards. Report it as sent, never as received or delivered, and if it matters that a document arrived, the only way to know is to ask the recipient.
 - **Never delete or void a document you have just sent — it cancels the queued email.** Measured on 2026-08-16: two sends reported `EmailSent` with a `DeliveryInfo` timestamp and never arrived, both deleted seconds later; an identical send left in place arrived. If a send needs undoing, the email is already gone or already cancelled, and deleting decides which — so leave the document alone and tell the user what happened instead.
+- `list_overdue_invoices` / `send_overdue_invoice_reminders` — Overdue reminders, QuickBooks only. `list_overdue_invoices` lists every open invoice past its due date by any number of days, with the customer, invoice number, amount due, days overdue and the email address the reminder would go to. Show the user that whole list, every address included, and get one explicit yes. `send_overdue_invoice_reminders` then sends the approved ids in one call, at most 50 per call (send the rest in another call). This is the one exception to one document per approval: one yes covers that list and only that list, so ask again for anything added. Each invoice gets the same send as `send_invoice_email`: one held with `recipient_unconfirmed` is not sent, does not stop the others, and is passed on to the user as above. Never delete or void a reminded invoice straight after: it stops the queued mail.
 
 ### Bulk Posting
 
@@ -581,7 +585,7 @@ is no way to get more, so do not offer one.
 - `refresh_live_bank_balance` — One bank login's balance fetched live from the bank, only when the user asks for it: first call previews (cached balance + `confirm_token`, nothing used), the second, confirmed call fetches. 10 per company per month
 - `plaid_sync_status` — Per-bank freshness: `last_synced_at`, `needs_reauth`, `error_code`, `lifecycle_state`
 - `search_plaid_transactions` / `plaid_transactions_summary` — The bank feed itself
-- `propose_bank_coding` / `preview_bulk_classification` — Proposed coding for unbooked lines
+- `propose_bank_coding` / `preview_bulk_classification` — Proposed coding for unbooked lines. `propose_bank_coding` also returns `possible_duplicates_after_booking`: an entry NumbersGame did not create, on the same register, for the same amount within 3 days of a line booked in the last 45 days. It is usually the ledger's own bank feed adding that line again. It is a warning, never a hold: tell the user to open both entries in QuickBooks and delete the one NumbersGame did not create. Registers that could not be read are listed in `possible_duplicates_check_skipped`
 - `book_bank_transaction` / `bulk_book_bank_transactions` / `reverse_bank_booking` — Write bank lines into QuickBooks (approval required, as with every write)
 - `list_held_bank_transactions` — Lines coded earlier and held for review, with the coding that was chosen. **Call this first in any bank session**, and `list_held_statement_lines` too, where the company imports statements: a hold made in a previous conversation is stored, so the categorisation does not have to be worked out again
 - `approve_bank_transactions` — Post lines the user has seen and confirmed: lines held on score, and lines held on a veto a person is entitled to answer
@@ -870,6 +874,8 @@ uncategorised in QuickBooks, say plainly that it can be seen in the QuickBooks
 UI, and that Intuit's own QuickBooks Labs connector can read it. Do not
 substitute the register and do not guess at it.
 
+**A bank account fed both ways: Match, never Add.** If a bank account is connected to NumbersGame and also to QuickBooks' own bank feed, the same line can reach the books twice. In that QuickBooks queue (under Banking), **Match** each downloaded line to the entry NumbersGame already created. Never click **Add**: Add creates a second copy. Or turn off QuickBooks' bank feed for that account. On Xero, match the statement line to the entry NumbersGame created on the reconcile screen; do not Create a new one.
+
 ### Before reporting that a company has no bank activity
 
 Confirm a feed actually exists for that company with `list_plaid_items` or
@@ -902,6 +908,8 @@ be brought up to date, and that is still entirely possible.
 - `qbo_generate_reconciliation_report` — Bank reconciliation with matched/unmatched items. Pass `bank_account_id` (from `search_accounts`), `statement_ending_date` and `statement_ending_balance`; the server reads the GL balance and computes the difference, so `gl_ending_balance` and `difference` are not needed
 - `qbo_generate_issues_report` — Miscategorizations, duplicates, anomalies
 
+The close, board and reconciliation report tools each return two things: a signed download link for the user, valid 24 hours, and an `att_` handle for `upload_attachable`, valid 1 hour, to attach the PDF to a transaction.
+
 If a result says a figure is "not verified against the ledger", tell the user which figure and why: the ledger read failed or an input was missing, so the PDF prints your figure marked unverified.
 
 ### Attachment Tools
@@ -910,7 +918,7 @@ Two kinds of attachment, and they take different routes. Both work on QuickBooks
 
 - `generate_attachment` — Server-side PDF/XLSX generation for a document **you** compose: a supporting memo, a schedule. The close, board and reconciliation reports are not built here: they have their own tools (PDF Output Tools above), which read their figures from the ledger. Returns a **handle** (`att_<32 hex>`). Handles expire after 1 hour. Max 25 MB.
 - `request_attachment_upload` — For a file **the user already has**: the PDF they attached to this conversation, a scan, a receipt photo. Returns a one-time upload URL on this connector's own server. PUT the file's bytes to it from your code-execution sandbox (`curl -s -X PUT --data-binary @<path> -H "Content-Type: ..." "<url>"`), and the response gives you a handle. Single use, expires in ten minutes. The handle itself expires 1 hour after the upload: call `upload_attachable` straight after each PUT (upload, attach, then the next file), not as a batch later -- an expired handle means uploading the file again.
-- `upload_attachable` — Attaches a handle from **either** of the above to the transaction.
+- `upload_attachable` — Attaches a handle from **either** of the above, or from `get_document_pdf` or the close, board or reconciliation report tools, to the transaction.
 - `get_attachments` — List what is already attached. Check this first, for the reason below.
 
 **Never re-type a user's document into `generate_attachment` and attach it as the original.** You can read their PDF and write a summary of it — say that is what it is. A transcription that looks like a source document is worse on a ledger than no attachment.
@@ -1115,7 +1123,7 @@ After all corrections are applied, re-pull the balance sheet and each affected r
 and diff them in code against the figures you are about to report. Any difference →
 fix or name it before generating.
 
-1. **Month-End Close Report PDF** — use `qbo_generate_close_report` with `period_end`; the server reads the Trial Balance and Balance Sheet totals from the ledger, so do not copy them into the call. It returns a signed download link (24 hours), not a handle
+1. **Month-End Close Report PDF** — use `qbo_generate_close_report` with `period_end`; the server reads the Trial Balance and Balance Sheet totals from the ledger, so do not copy them into the call. It returns a signed download link (24 hours) and an `att_` handle for `upload_attachable` (1 hour)
    - BS tie-out check
    - Close checklist with pass/fail/warning for each item
    - List of adjusting entries made
@@ -1379,10 +1387,10 @@ generate_attachment(
 | Document Type | Method |
 |--------------|--------|
 | Supporting memo | `generate_attachment` (handle) → `upload_attachable` |
-| Close report | `qbo_generate_close_report` (`period_end`) → signed download link, not a handle |
+| Close report | `qbo_generate_close_report` (`period_end`) → signed download link (24 hours) + handle (1 hour) → `upload_attachable` |
 | Close Package Excel | `generate_attachment(format='xlsx')` (handle) → `upload_attachable` or download link |
-| Board report | `qbo_generate_board_report` (`period_start`, `period_end`, `cash_position`) → signed download link, not a handle |
-| Reconciliation report | `qbo_generate_reconciliation_report` (`bank_account_id`, `statement_ending_date`, `statement_ending_balance`) → signed download link, not a handle |
+| Board report | `qbo_generate_board_report` (`period_start`, `period_end`, `cash_position`) → signed download link (24 hours) + handle (1 hour) → `upload_attachable` |
+| Reconciliation report | `qbo_generate_reconciliation_report` (`bank_account_id`, `statement_ending_date`, `statement_ending_balance`) → signed download link (24 hours) + handle (1 hour) → `upload_attachable` |
 | Issues report | `generate_attachment` (handle) → `upload_attachable` |
 | XLSX data exports | `generate_attachment` (handle) → `upload_attachable` |
 
@@ -1465,7 +1473,7 @@ against measured behaviour.
 - Answer a question about what is on an account by reading the bank feed, or describe QuickBooks register data as "the bank feed" — see Where bank data comes from
 - Report that a company has no bank transactions, or nothing left to categorise, without first confirming a feed exists for it
 - Tell a user to reconnect to fix bank access — it never grants it; the bank feed is approved once for the whole firm — or suggest bank connections can be enabled, bought, requested or arranged, without knowing whether their firm has them
-- Send a document without an approval naming the resolved recipient address, in a batch, or as a step inside a larger approved workflow — sending is always its own decision
+- Send a document without an approval naming the resolved recipient address, in a batch, or as a step inside a larger approved workflow — sending is always its own decision. The one batch allowed is overdue reminders through `send_overdue_invoice_reminders`, after the user has seen the whole list
 - Tell a user a document was delivered or received on the strength of `EmailStatus` or `DeliveryInfo`, or delete or void a document you have just emailed
 - Send `reconciled_change_reason` without the user explicitly deciding to change a finished reconciliation and accepting that they will re-do it — it is a decision to take the books out of balance, not a parameter that makes a refusal go away
 - Post a reversing journal entry where a credit memo or vendor credit is the correct document, or record paid-on-the-spot revenue as an invoice plus a payment
