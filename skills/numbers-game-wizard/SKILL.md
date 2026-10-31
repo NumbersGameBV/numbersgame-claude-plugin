@@ -5,7 +5,7 @@ description: Executes month-end close, book audits, COA checks, payroll reconcil
 
 # NumbersGame Accounting — Bookkeeping Analysis Skill
 
-**Skill version: 2026.10.31.1**
+**Skill version: 2026.10.31.2**
 
 Installed skills do not update themselves. The current version is shown on the
 **Setup** page of the NumbersGame dashboard (`/app/setup`) — if the version
@@ -897,10 +897,12 @@ to report the refusal is the one wrong answer: the user asked for their books to
 be brought up to date, and that is still entirely possible.
 
 ### PDF Output Tools (branded deliverables)
-- `qbo_generate_board_report` — Financial summary for stakeholders
-- `qbo_generate_close_report` — Close checklist, adjustments, sign-off
-- `qbo_generate_reconciliation_report` — Bank reconciliation with matched/unmatched items
+- `qbo_generate_board_report` — Financial summary for stakeholders. Pass `period_start` and `period_end`; the server reads revenue, net income and the Balance Sheet totals from the ledger, so do not copy them into the call. `cash_position` is still yours to supply
+- `qbo_generate_close_report` — Close checklist, adjustments, sign-off. Pass `period_end`; the server reads the Trial Balance and Balance Sheet totals from the ledger, so do not copy them into the call
+- `qbo_generate_reconciliation_report` — Bank reconciliation with matched/unmatched items. Pass `bank_account_id` (from `search_accounts`), `statement_ending_date` and `statement_ending_balance`; the server reads the GL balance and computes the difference, so `gl_ending_balance` and `difference` are not needed
 - `qbo_generate_issues_report` — Miscategorizations, duplicates, anomalies
+
+If a result says a figure is "not verified against the ledger", tell the user which figure and why: the ledger read failed or an input was missing, so the PDF prints your figure marked unverified.
 
 ### Attachment Tools
 
@@ -1042,7 +1044,10 @@ work from the statement against the QuickBooks register and say which you used.
    - **Expenses/debits** → `create_purchase`
    - **Account-to-account moves** → `create_transfer`
    - **Complex/multi-account** → `create_journal_entry`
-4. Generate Reconciliation Report PDF: `qbo_generate_reconciliation_report`
+4. Generate Reconciliation Report PDF: `qbo_generate_reconciliation_report`, with
+   `bank_account_id` (from `search_accounts`), `statement_ending_date` and the
+   statement ending balance. The server reads the GL balance itself; there is no
+   need to pass `gl_ending_balance` or `difference`.
 
 ### Step 3 — Scan for Issues
 
@@ -1217,7 +1222,7 @@ Lighter version, no full report required unless issues found.
 1. Pull P&L, BS, AR Aging, AP Aging, and Cash Flow (`qbo_report_cash_flow`) for the period
 2. Calculate: revenue growth, expense trends, gross margin, burn rate, runway (avg and trailing month). On accrual books, source burn and runway from the cash flow statement rather than inferring them from the P&L — profit and cash are different questions, and the board is asking the second one
 3. Identify top 3–5 highlights and risk flags
-4. Generate Board Report PDF: `qbo_generate_board_report`
+4. Generate Board Report PDF: `qbo_generate_board_report`, with `period_start`, `period_end` and `cash_position`. The server reads revenue, net income and the Balance Sheet totals from the ledger; do not copy them into the call
 5. Generate Stakeholder Questions if a client-facing meeting is upcoming
 
 ---
