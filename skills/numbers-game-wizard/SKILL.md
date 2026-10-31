@@ -5,7 +5,7 @@ description: Executes month-end close, book audits, COA checks, payroll reconcil
 
 # NumbersGame Accounting — Bookkeeping Analysis Skill
 
-**Skill version: 2026.10.28.1**
+**Skill version: 2026.10.31.1**
 
 Installed skills do not update themselves. The current version is shown on the
 **Setup** page of the NumbersGame dashboard (`/app/setup`) — if the version
@@ -864,9 +864,10 @@ QuickBooks.
 ### What nobody can retrieve
 
 QuickBooks' own "For Review" queue — items its bank connection has downloaded
-but which nobody has categorised yet — is **not exposed by the QuickBooks API to
-anyone, us included**. If a user asks what is sitting uncategorised in
-QuickBooks, say plainly that it can only be seen in the QuickBooks UI. Do not
+but which nobody has categorised yet — is **not available through the public
+QuickBooks API, so not through NumbersGame**. If a user asks what is sitting
+uncategorised in QuickBooks, say plainly that it can be seen in the QuickBooks
+UI, and that Intuit's own QuickBooks Labs connector can read it. Do not
 substitute the register and do not guess at it.
 
 ### Before reporting that a company has no bank activity
