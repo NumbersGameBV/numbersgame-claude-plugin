@@ -5,7 +5,7 @@ description: Executes month-end close, book audits, COA checks, payroll reconcil
 
 # NumbersGame Accounting — Bookkeeping Analysis Skill
 
-**Skill version: 2026.10.31.2**
+**Skill version: 2026.10.31.3**
 
 Installed skills do not update themselves. The current version is shown on the
 **Setup** page of the NumbersGame dashboard (`/app/setup`) — if the version
@@ -908,7 +908,7 @@ If a result says a figure is "not verified against the ledger", tell the user wh
 
 Two kinds of attachment, and they take different routes. Both work on QuickBooks and Xero.
 
-- `generate_attachment` — Server-side PDF/XLSX generation for a document **you** compose: a supporting memo, a close report, a schedule. Returns a **handle** (`att_<32 hex>`). Handles expire after 1 hour. Max 25 MB.
+- `generate_attachment` — Server-side PDF/XLSX generation for a document **you** compose: a supporting memo, a schedule. The close, board and reconciliation reports are not built here: they have their own tools (PDF Output Tools above), which read their figures from the ledger. Returns a **handle** (`att_<32 hex>`). Handles expire after 1 hour. Max 25 MB.
 - `request_attachment_upload` — For a file **the user already has**: the PDF they attached to this conversation, a scan, a receipt photo. Returns a one-time upload URL on this connector's own server. PUT the file's bytes to it from your code-execution sandbox (`curl -s -X PUT --data-binary @<path> -H "Content-Type: ..." "<url>"`), and the response gives you a handle. Single use, expires in ten minutes. The handle itself expires 1 hour after the upload: call `upload_attachable` straight after each PUT (upload, attach, then the next file), not as a batch later -- an expired handle means uploading the file again.
 - `upload_attachable` — Attaches a handle from **either** of the above to the transaction.
 - `get_attachments` — List what is already attached. Check this first, for the reason below.
@@ -1115,7 +1115,7 @@ After all corrections are applied, re-pull the balance sheet and each affected r
 and diff them in code against the figures you are about to report. Any difference →
 fix or name it before generating.
 
-1. **Month-End Close Report PDF** — use `generate_attachment` (server-side) → attach via `upload_attachable` with handle
+1. **Month-End Close Report PDF** — use `qbo_generate_close_report` with `period_end`; the server reads the Trial Balance and Balance Sheet totals from the ledger, so do not copy them into the call. It returns a signed download link (24 hours), not a handle
    - BS tie-out check
    - Close checklist with pass/fail/warning for each item
    - List of adjusting entries made
@@ -1379,10 +1379,10 @@ generate_attachment(
 | Document Type | Method |
 |--------------|--------|
 | Supporting memo | `generate_attachment` (handle) → `upload_attachable` |
-| Close report | `generate_attachment` (handle) → `upload_attachable` |
+| Close report | `qbo_generate_close_report` (`period_end`) → signed download link, not a handle |
 | Close Package Excel | `generate_attachment(format='xlsx')` (handle) → `upload_attachable` or download link |
-| Board report | `generate_attachment` (handle) → `upload_attachable` |
-| Reconciliation report | `generate_attachment` (handle) → `upload_attachable` |
+| Board report | `qbo_generate_board_report` (`period_start`, `period_end`, `cash_position`) → signed download link, not a handle |
+| Reconciliation report | `qbo_generate_reconciliation_report` (`bank_account_id`, `statement_ending_date`, `statement_ending_balance`) → signed download link, not a handle |
 | Issues report | `generate_attachment` (handle) → `upload_attachable` |
 | XLSX data exports | `generate_attachment` (handle) → `upload_attachable` |
 
