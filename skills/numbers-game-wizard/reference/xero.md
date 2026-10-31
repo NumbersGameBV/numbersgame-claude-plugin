@@ -23,7 +23,7 @@ returning the wrong rows.
 - **Read:** a customer, supplier, invoice or item in full.
 - **Write:** create and update contacts, create and update invoices, create
   bills, create items and accounts, void an invoice.
-- **Repeating invoices (Xero only):** `list_repeating_invoices` and
+- **Repeating invoices (QuickBooks too, see SKILL.md):** `list_repeating_invoices` and
   `get_repeating_invoice` read the templates, with each one's schedule, lines
   and history; deleted ones are hidden unless asked for.
   `create_repeating_invoice` creates a SALES template, weekly or monthly, as a
