@@ -5,7 +5,7 @@ description: Executes month-end close, book audits, COA checks, payroll reconcil
 
 # NumbersGame Accounting — Bookkeeping Analysis Skill
 
-**Skill version: 2026.10.31.4**
+**Skill version: 2026.11.01.1**
 
 Installed skills do not update themselves. The current version is shown on the
 **Setup** page of the NumbersGame dashboard (`/app/setup`) — if the version
@@ -588,7 +588,7 @@ is no way to get more, so do not offer one.
 - `propose_bank_coding` / `preview_bulk_classification` — Proposed coding for unbooked lines. `propose_bank_coding` also returns `possible_duplicates_after_booking`: an entry NumbersGame did not create, on the same register, for the same amount within 3 days of a line booked in the last 45 days. It is usually the ledger's own bank feed adding that line again. It is a warning, never a hold: tell the user to open both entries in QuickBooks and delete the one NumbersGame did not create. Registers that could not be read are listed in `possible_duplicates_check_skipped`
 - `book_bank_transaction` / `bulk_book_bank_transactions` / `reverse_bank_booking` — Write bank lines into QuickBooks (approval required, as with every write)
 - `list_held_bank_transactions` — Lines coded earlier and held for review, with the coding that was chosen. **Call this first in any bank session**, and `list_held_statement_lines` too, where the company imports statements: a hold made in a previous conversation is stored, so the categorisation does not have to be worked out again
-- `approve_bank_transactions` — Post lines the user has seen and confirmed: lines held on score, and lines held on a veto a person is entitled to answer
+- `get_booking_run` / `update_booking_run` / `post_booking_run` — The booking run `propose_bank_coding` opens: read it (`latest: true` resumes it in a new conversation), change lines before posting, and post the lines the user has seen and confirmed: lines held on score, and lines held on a veto a person is entitled to answer
 - `set_accounting_policy` — Set this company's accounting basis, capitalization threshold, applicable-financial-statement answer, or strict bill matching. Ask the user for the value; never choose one yourself
 - `mark_plaid_transaction_ignored` / `report_bank_booking_run` / `propose_never_billed_vendors`
 - `propose_descriptor_aliases` — The feed's near misses: bank strings the feed could not code although one of the company's own rules plainly describes them, grouped by rule with the money at stake and the words that matched. Read-only. Show them to the user, and record the ones they confirm with `add_descriptor_aliases` in one call. Run it when many feed lines sit in review for want of a rule.
@@ -608,26 +608,38 @@ written for exactly this.
 
 | `clearance` | What it means | What you do |
 |---|---|---|
-| `none` | held on score alone, nothing structural | show it, and on their confirmation post it with `approve_bank_transactions` |
+| `none` | held on score alone, nothing structural | show it, and on their confirmation post it with `post_booking_run` |
 | `sweepable` | a judgement a person may overrule | same, and these MAY go in one batch — see "approve all" below |
-| `confirm` | a judgement, but one where a wrong post duplicates money | show that line **on its own**, and send the user's own sentence in that line's `reason` field |
+| `confirm` | a judgement, but one where a wrong post duplicates money | show that line **on its own**, and send the user's own sentence for that line in `post_booking_run`'s `line_reasons` |
 | `correct` | the coding itself is wrong | resend it fixed with `book_bank_transaction` — name the destination register, correct the splits |
 | `ignore_only` | payroll | never post it; `mark_plaid_transaction_ignored` |
 | `settable_in_chat` | the accounting basis has never been stated | ask the user cash or accrual, then `set_accounting_policy` |
 | `needs_setting` | a company setting only the portal has | say which, and who can change it |
 | `blocked` | QuickBooks could not be read, or nothing moved | retry once, then report it as a connection fault |
 
+Bank feed: `propose_bank_coding` opens a run and writes nothing to the books.
+Show the user the lines that need their yes, grouped, with the reasons. Changes
+go through `update_booking_run`; its result is what you show next. Post with
+`post_booking_run { run_id, review_token }` only after the user's yes to the
+lines you showed; it posts the stored coding, so never re-type it. Follow
+`state`: `show` means some lines changed or were not shown, so call
+`get_booking_run` and ask again; `confirming` means settle the unconfirmed lines
+with `reverse_bank_booking`; `done` means report the per-account counts from
+the result, including every line left for the user and why. In a new
+conversation, `get_booking_run { latest: true }` resumes the work, but a yes
+from an earlier conversation does not carry over: show and ask again.
+
 **"Approve all" is a normal thing for a user to say, and you should honour it.**
 List the held lines with their reasons first, wait for the user, and when they
-say to approve them, send exactly those lines in one `approve_bank_transactions`
-call. Never approve a line the user has not been shown. A reason is optional for
+say to approve them, post exactly those lines in one `post_booking_run` call,
+with the `review_token` from the result that showed them. Never approve a line the user has not been shown. A reason is optional for
 `sweepable` lines — do not manufacture one, though offering to record what the
 user actually said is good practice.
 
 **The `confirm` three cannot travel in that batch, by design.** They are
 `already_in_general_ledger`, `capital_expenditure` and `transfer_leg_missing`,
-and each needs the user's own sentence about that specific line, sent in that
-line's `reason`. If you sweep them the server refuses those lines by name and
+and each needs the user's own sentence about that specific line, sent in
+`line_reasons` for that line. If you sweep them the server refuses those lines by name and
 tells you to put them to the user individually. Do that rather than retrying.
 
 - `already_in_general_ledger` — QuickBooks already records this event. Usually
