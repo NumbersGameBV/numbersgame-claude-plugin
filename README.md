@@ -17,13 +17,7 @@ Add marketplace**, paste `NumbersGameBV/numbersgame-claude-plugin`, open
 **NumbersGame** and add it. Then connect each connector on the plugin's
 **Connectors** tab.
 
-**Claude Code**: in a session, run
-
-```
-/plugin install numbers-game --marketplace NumbersGameBV/numbersgame-claude-plugin
-```
-
-or from a shell:
+**Claude Code**: from a shell, run
 
 ```
 claude plugin install numbers-game --marketplace NumbersGameBV/numbersgame-claude-plugin
@@ -137,7 +131,5 @@ Proprietary. See [LICENSE](LICENSE).
 ## Keeping the skill current (maintainers)
 
 The skill's master copy lives in the NumbersGame app. This plugin is
-re-rendered automatically from the live skill by
-[`.github/workflows/sync-from-live-skill.yml`](.github/workflows/sync-from-live-skill.yml),
-which opens a pull request for review whenever the app serves a newer plugin
-version.
+re-rendered automatically from the live skill by a workflow in the NumbersGame
+app repository, which opens a pull request here for review.
