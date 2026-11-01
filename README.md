@@ -27,7 +27,7 @@ claude plugin install numbers-game --marketplace NumbersGameBV/numbersgame-claud
 `claude plugin update numbers-game`.
 
 Firms with their own NumbersGame Custom Skill install their firm's package from
-**Set up** in the NumbersGame portal instead.
+**Set up → Package** in the NumbersGame portal instead.
 
 ## What it does
 
