@@ -145,7 +145,7 @@ jobs:
           branch="auto/skill-v$SKILL_VERSION"
           repo="$GITHUB_REPOSITORY"
 
-          open="$(gh pr list --repo "$repo" --head "$branch" --state open --json number --jq 'length')"
+          open="$(gh pr list --repo "$repo" --head "$branch" --state open --json number | jq 'length')"
           if [ "$open" != "0" ]; then
             echo "A pull request from $branch is already open; nothing to do."
             exit 0
@@ -171,9 +171,23 @@ jobs:
           **OpenAI portal: upload \`$SKILL_BASE_URL/openai-plugin.zip\` (plugin $OPENAI_VERSION, sha256 \`$SHA_OPENAI\`) in OpenAI's plugin portal — a human step.**
           EOF
 
-          if ! gh pr create --repo "$repo" --base main --head "$branch" \
+          if ! url="$(gh pr create --repo "$repo" --base main --head "$branch" \
                  --title "Skill v$SKILL_VERSION ($LABEL): re-render from the live skill, plugin $LIVE" \
-                 --body-file "$body" --reviewer mjanssen19 --assignee mjanssen19; then
+                 --body-file "$body" --reviewer mjanssen19 --assignee mjanssen19)"; then
             echo "::error::Could not open the pull request. If the error says Actions may not create pull requests, enable Settings > Actions > General > 'Allow GitHub Actions to create and approve pull requests'. Branch $branch is pushed."
             exit 1
           fi
+          new="${url##*/}"
+          echo "Opened #$new: $url"
+
+          # Close older auto/skill-v<N> PRs (lower N, from this repo only) that
+          # this one supersedes, and delete their branches. Other PRs: untouched.
+          gh pr list --repo "$repo" --state open --limit 200 --json number,headRefName,isCrossRepository \
+            | jq -r '.[] | select(.isCrossRepository | not) | select(.headRefName | test("^auto/skill-v[0-9]+$")) | "\(.number) \(.headRefName)"' \
+            | while read -r num head; do
+                n="${head#auto/skill-v}"
+                if [ "$num" != "$new" ] && [ "$n" -lt "$SKILL_VERSION" ]; then
+                  echo "Closing #$num ($head): superseded by #$new."
+                  gh pr close "$num" --repo "$repo" --comment "Superseded by #$new" --delete-branch
+                fi
+              done
