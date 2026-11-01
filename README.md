@@ -23,10 +23,11 @@ Add marketplace**, paste `NumbersGameBV/numbersgame-claude-plugin`, open
 claude plugin install numbers-game --marketplace NumbersGameBV/numbersgame-claude-plugin
 ```
 
-**Updates**: use **Check for updates** on the plugin.
+**Updates**: use **Check for updates** on the plugin. In Claude Code, run
+`claude plugin update numbers-game`.
 
 Firms with their own NumbersGame Custom Skill install their firm's package from
-Setup in the NumbersGame portal instead.
+**Set up** in the NumbersGame portal instead.
 
 ## What it does
 
