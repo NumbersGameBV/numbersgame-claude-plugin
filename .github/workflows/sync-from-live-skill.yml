@@ -1,0 +1,179 @@
+# NUM-584: re-render this plugin from the live NumbersGame skill.
+#
+# Every 30 minutes (and on demand) this asks the NumbersGame app which plugin
+# version it serves. When that is newer than .claude-plugin/plugin.json on main,
+# it downloads the public Claude plugin zip, checks its sha256 against the one
+# the app published, replaces exactly the files the app renders
+# (.claude-plugin/plugin.json, .mcp.json, assets/, skills/) and opens ONE pull
+# request for the owner to review. It never touches README.md, LICENSE, .github/
+# or .claude-plugin/marketplace.json, and it cannot merge: main requires the
+# owner's review.
+#
+# This file runs on GitHub's runners only. It is not part of the plugin a user
+# installs, and the plugin still ships no code.
+name: Sync from the live skill
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: sync-from-live-skill
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out main
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+
+      - name: Fetch the live version and re-render
+        id: sync
+        env:
+          SKILL_BASE_URL: https://app.numbersgame.xyz/api/skill/public
+        run: |
+          set -euo pipefail
+          work="$(mktemp -d)"
+
+          # 1. The live version. Fail soft: the endpoint may not be deployed yet.
+          code="$(curl -sS -o "$work/version.json" -w '%{http_code}' --max-time 30 \
+            "$SKILL_BASE_URL/version" || true)"
+          if [ "$code" != "200" ] || ! jq -e 'type == "object"' "$work/version.json" >/dev/null 2>&1; then
+            echo "::notice::$SKILL_BASE_URL/version answered HTTP ${code:-none} without a JSON object; nothing to do."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Deployed and answering JSON: from here on a bad answer is an error.
+          field() { jq -er "$1 | select(type == \"string\" or type == \"number\") | tostring" "$work/version.json"; }
+          skill_version="$(field .version)"
+          label="$(field .label)"
+          live="$(field .claudePluginVersion)"
+          openai_version="$(field .openaiPluginVersion)"
+          sha_claude="$(field .sha256.claude)"
+          sha_openai="$(field .sha256.openai)"
+          current="$(jq -er .version .claude-plugin/plugin.json)"
+          echo "Live: skill v$skill_version ($label), plugin $live. main: plugin $current."
+
+          # 2. Compare. Only a strictly newer live version does anything.
+          if [ "$live" = "$current" ]; then
+            echo "Up to date."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if [ "$(printf '%s\n%s\n' "$current" "$live" | sort -V | tail -n1)" != "$live" ]; then
+            echo "::notice::Live plugin $live is older than main's $current; nothing to do."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # 3. Download and verify.
+          curl -sS --fail --max-time 120 -o "$work/plugin.zip" "$SKILL_BASE_URL/claude-plugin.zip"
+          got="$(sha256sum "$work/plugin.zip" | cut -d' ' -f1)"
+          if [ "$got" != "$sha_claude" ]; then
+            echo "::error::claude-plugin.zip sha256 is $got, /version says $sha_claude. Not applying it."
+            exit 1
+          fi
+
+          # Only the paths the app renders, and nothing that climbs out.
+          bad="$(unzip -Z1 "$work/plugin.zip" | grep -vE '^(\.claude-plugin/plugin\.json|\.mcp\.json|assets/.*|skills/.*|\.claude-plugin/)$' || true)"
+          trav="$(unzip -Z1 "$work/plugin.zip" | grep -E '(^/|(^|/)\.\.(/|$))' || true)"
+          if [ -n "$bad$trav" ]; then
+            echo "::error::claude-plugin.zip holds unexpected entries:"; printf '%s\n' "$bad" "$trav"
+            exit 1
+          fi
+          mkdir "$work/unz"
+          unzip -q "$work/plugin.zip" -d "$work/unz"
+          for need in .claude-plugin/plugin.json .mcp.json assets skills/numbers-game-wizard/SKILL.md; do
+            if [ ! -e "$work/unz/$need" ]; then echo "::error::claude-plugin.zip has no $need."; exit 1; fi
+          done
+          zipped="$(jq -er .version "$work/unz/.claude-plugin/plugin.json")"
+          if [ "$zipped" != "$live" ]; then
+            echo "::error::The zip's plugin.json says $zipped, /version says $live."
+            exit 1
+          fi
+
+          # 4. Replace exactly these four; a file the zip dropped is deleted.
+          cp "$work/unz/.claude-plugin/plugin.json" .claude-plugin/plugin.json
+          cp "$work/unz/.mcp.json" .mcp.json
+          rm -rf assets skills
+          cp -R "$work/unz/assets" assets
+          cp -R "$work/unz/skills" skills
+
+          git add -A -- .claude-plugin/plugin.json .mcp.json assets skills
+          if git diff --cached --quiet; then
+            echo "::notice::The zip for plugin $live is identical to main; nothing to commit."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          summary="$(git diff --cached --shortstat | sed 's/^ *//')"
+          echo "$summary"
+          {
+            echo "changed=true"
+            echo "skill_version=$skill_version"
+            echo "label=$label"
+            echo "live=$live"
+            echo "openai_version=$openai_version"
+            echo "sha_claude=$sha_claude"
+            echo "sha_openai=$sha_openai"
+            echo "summary=$summary"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Open the pull request
+        if: steps.sync.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SKILL_BASE_URL: https://app.numbersgame.xyz/api/skill/public
+          SKILL_VERSION: ${{ steps.sync.outputs.skill_version }}
+          LABEL: ${{ steps.sync.outputs.label }}
+          LIVE: ${{ steps.sync.outputs.live }}
+          OPENAI_VERSION: ${{ steps.sync.outputs.openai_version }}
+          SHA_CLAUDE: ${{ steps.sync.outputs.sha_claude }}
+          SHA_OPENAI: ${{ steps.sync.outputs.sha_openai }}
+          SUMMARY: ${{ steps.sync.outputs.summary }}
+        run: |
+          set -euo pipefail
+          branch="auto/skill-v$SKILL_VERSION"
+          repo="$GITHUB_REPOSITORY"
+
+          open="$(gh pr list --repo "$repo" --head "$branch" --state open --json number --jq 'length')"
+          if [ "$open" != "0" ]; then
+            echo "A pull request from $branch is already open; nothing to do."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -c "$branch"
+          git commit -q -m "Skill v$SKILL_VERSION ($LABEL): re-render from the live skill, plugin $LIVE"
+          git push --force origin "$branch"
+
+          body="$(mktemp)"
+          cat > "$body" <<EOF
+          Re-rendered automatically from the live NumbersGame skill by \`.github/workflows/sync-from-live-skill.yml\`.
+
+          - Skill: v$SKILL_VERSION, label \`$LABEL\`
+          - Plugin version: $LIVE
+          - claude-plugin.zip sha256: \`$SHA_CLAUDE\` (verified against \`$SKILL_BASE_URL/version\`)
+          - Diff: $SUMMARY
+
+          Only \`.claude-plugin/plugin.json\`, \`.mcp.json\`, \`assets/\` and \`skills/\` were replaced.
+
+          **OpenAI portal: upload \`$SKILL_BASE_URL/openai-plugin.zip\` (plugin $OPENAI_VERSION, sha256 \`$SHA_OPENAI\`) in OpenAI's plugin portal — a human step.**
+          EOF
+
+          if ! gh pr create --repo "$repo" --base main --head "$branch" \
+                 --title "Skill v$SKILL_VERSION ($LABEL): re-render from the live skill, plugin $LIVE" \
+                 --body-file "$body" --reviewer mjanssen19 --assignee mjanssen19; then
+            echo "::error::Could not open the pull request. If the error says Actions may not create pull requests, enable Settings > Actions > General > 'Allow GitHub Actions to create and approve pull requests'. Branch $branch is pushed."
+            exit 1
+          fi

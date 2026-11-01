@@ -10,6 +10,30 @@ Numbers Game B.V. (Amsterdam). You need a NumbersGame account with at least one
 connected QuickBooks Online or Xero company. Sign up at
 <https://app.numbersgame.xyz>.
 
+## Install
+
+**claude.ai, Claude Desktop and Cowork**: go to **Customize → Plugins → Add →
+Add marketplace**, paste `NumbersGameBV/numbersgame-claude-plugin`, open
+**NumbersGame** and add it. Then connect each connector on the plugin's
+**Connectors** tab.
+
+**Claude Code**: in a session, run
+
+```
+/plugin install numbers-game --marketplace NumbersGameBV/numbersgame-claude-plugin
+```
+
+or from a shell:
+
+```
+claude plugin install numbers-game --marketplace NumbersGameBV/numbersgame-claude-plugin
+```
+
+**Updates**: use **Check for updates** on the plugin.
+
+Firms with their own NumbersGame Custom Skill install their firm's package from
+Setup in the NumbersGame portal instead.
+
 ## What it does
 
 - **Month-end close and book reviews**: trial balance, P&L, balance sheet,
@@ -112,8 +136,8 @@ Proprietary. See [LICENSE](LICENSE).
 
 ## Keeping the skill current (maintainers)
 
-The skill's master copy lives in the NumbersGame app. The app's
-`scripts/render-claude-plugin.ts` regenerates `skills/numbers-game-wizard/` from
-the published seed, with no firm customisation. After each skill publish, run it
-from the app root against this checkout, bump `version` in
-`.claude-plugin/plugin.json`, and commit.
+The skill's master copy lives in the NumbersGame app. This plugin is
+re-rendered automatically from the live skill by
+[`.github/workflows/sync-from-live-skill.yml`](.github/workflows/sync-from-live-skill.yml),
+which opens a pull request for review whenever the app serves a newer plugin
+version.
