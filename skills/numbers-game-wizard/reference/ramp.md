@@ -41,7 +41,9 @@ file then has a **Ramp (read-only)** section naming the Ramp business and entity
 - **Receipts.** `include_receipt_details: true` on `ramp_search_transactions` or
   `ramp_search_reimbursements` shows each receipt's upload date and who uploaded it.
   The receipt file stays in Ramp.
-- **No Ramp tools in the conversation?** The user has not added the NumbersGame –
-  Ramp connector in Claude yet; its address is on the Setup page in NumbersGame.
+- **No Ramp tools in the conversation?** The user has not connected Ramp in Claude
+  yet: first the **Connectors** tab of the NumbersGame plugin in Claude, where
+  **NumbersGame – Ramp** is connected; without the plugin, a custom connector,
+  whose address is on the Setup page in NumbersGame.
   A company without a Ramp section in its .md file is not linked to Ramp.
 - **Ramp accounts receivable** has no API: customer invoices are in the ledger only.

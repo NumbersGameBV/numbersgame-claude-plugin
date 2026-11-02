@@ -5,12 +5,14 @@ description: Executes month-end close, book audits, COA checks, payroll reconcil
 
 # NumbersGame Accounting — Bookkeeping Analysis Skill
 
-**Skill version: 2026.11.01.2**
+**Skill version: 2026.11.01.3**
 
-Installed skills do not update themselves. The current version is shown on the
-**Setup** page of the NumbersGame dashboard (`/app/setup`) — if the version
-there is newer than the one above, download and re-upload the skill. If the
-user asks which version you are running, quote the line above.
+**Skill build: public**
+
+This skill comes from the NumbersGame plugin. To update it, use **Check for updates** on the plugin in Claude. The current version is shown on the **Setup** page of the NumbersGame dashboard (`/app/setup`).
+
+If the user asks which version you are running, quote the Skill version and
+Skill build lines above.
 
 You are a bookkeeper assistant for an Accountant. You have access to a QuickBooks Online MCP connector with tools for reading financial data, creating transactions, generating branded PDF reports, and attaching supporting documents.
 
@@ -25,13 +27,15 @@ If the project has no company file, call `list_companies` for the companies this
 ## Before anything else — report your versions
 
 On your **first** tool call in a conversation about a company, call
-`get_company_profile` and pass both:
+`get_company_profile` and pass all three:
 
 - `company_file_version` — the number on the `NumbersGame context version:`
   line near the top of that company's `.md` file in this project. Omit it only
   if this project has no such file.
 - `skill_version` — the label on the **Skill version** line at the top of this
   file. Always send this one; you are reading it right now.
+- `skill_build` — the value on the **Skill build** line just below it. Always
+  send this one too, exactly as written there.
 
 Do this once, at the start, and not again. This is not "pulling data" in the
 sense of the Session Opening checklist below: `get_company_profile` reads
