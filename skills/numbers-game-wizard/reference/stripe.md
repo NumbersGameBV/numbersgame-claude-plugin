@@ -28,9 +28,17 @@ Offer the onboarding; don't wait to be asked.
    misuse flags, products (multi-month prices, prices without a revenue rule),
    whether Stripe Revenue Recognition answers, prior Stripe deposits, and the
    recommended **revenue path**.
-2. Ask the three checkpoint questions **one at a time**: Is Stripe Revenue
-   Recognition on? Does the client bill more than a month at a time? From which
-   date should Stripe accruals start?
+2. Ask the checkpoint questions **one at a time**, in the order
+   `stripe_onboarding_assess` lists them: how the business uses Stripe (only
+   when the company page's Stripe card has not chosen it); on a marketplace,
+   agent or principal (recommend agent); on a marketplace, while still unset,
+   how a transfer finds its charge (`job_link`, default `transfer_group`), the
+   charge metadata key that holds the provider's share (`expected_share_key`,
+   default `provider_amount`) and, booked as agent, what a refund does to the
+   platform's fee (`refund_fee_policy`, default `pro_rata`); then: Is Stripe
+   Revenue Recognition on? Does the client bill more than a month at a time?
+   From which date should Stripe accruals start? Save every answer, a default
+   included, with `stripe_setup_accounts`, so it is not asked again.
 3. `stripe_setup_accounts`: map existing accounts first (`search_accounts`),
    create only what is missing, map payout destinations, set the cadence, time
    zone, `cutoff_date` (the start date), `revenue_path`, and, when the client
