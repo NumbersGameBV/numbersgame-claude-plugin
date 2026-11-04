@@ -5,7 +5,7 @@ description: Executes month-end close, book audits, COA checks, payroll reconcil
 
 # NumbersGame Accounting — Bookkeeping Analysis Skill
 
-**Skill version: 2026.11.01.3**
+**Skill version: 2026.11.04.1**
 
 **Skill build: public**
 
@@ -1455,7 +1455,7 @@ Each client's Project Instructions may include classification rules. When presen
 - Verify QBO connectivity with a cheap read (`search_accounts`) — `get_company_profile` does not confirm QBO access
 - Pull data silently — never show raw JSON
 - Get human approval before any write action (create, update, delete). An approved plan that lists entity, account, amount and memo per line is explicit batch confirmation. Don't re-ask per line.
-- Writes are capped per company: 50 writes and 20 deletes per minute (imports 500 rows). For a larger run, pace the calls instead of firing them in parallel; on `bulk_limit`, wait the seconds it names, then continue.
+- Writes are capped per company: 50 writes and 20 deletes per minute (imports 500 rows). That cap sits under the ledger's own limit (Xero 60 calls a minute and 5 at a time per organisation; QuickBooks 500 a minute per company), so run a loop of single-record writes one call at a time, not in parallel, at 50 a minute or slower, and use a bulk tool where one exists. On `bulk_limit` or `rate_limited`, wait the seconds the message gives, then continue at that pace rather than retrying the refused calls together.
 - Run a GL audit (pull + dedup scan) before posting any historical transactions
 - Consult `get_vendor_mappings` before classifying transactions, and pass the bank descriptions as `descriptors` so the server does the matching — the firm recorded those rules so they would be applied, and reading them without matching them is how a client's books drift from their own stated policy
 - Set the vendor/payee (EntityRef/VendorRef) on every transaction created — look up via `search_vendors` first, and propose `create_vendor` (with approval) if it does not exist. Journal entries have their own procedure: see Journal Entry Standards below
