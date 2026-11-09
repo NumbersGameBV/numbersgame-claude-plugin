@@ -5,7 +5,7 @@ description: Executes month-end close, book audits, COA checks, payroll reconcil
 
 # NumbersGame Accounting — Bookkeeping Analysis Skill
 
-**Skill version: 2026.11.04.2**
+**Skill version: 2026.11.09.1**
 
 **Skill build: public**
 
@@ -88,7 +88,7 @@ Working on an entity group rather than one company? Same call, with the group's
 - Reasoning only when asked "why"; otherwise it goes in the memo or report.
 - Checks that passed or didn't flag: one line total ("Duplicates, AMA, personal: none").
 - Clarifying questions: tappable options where the interface supports it; max 3,
-  2–4 choices each + "Other"; free-text entry for dates, EIN, names.
+  2–4 choices each + "Other"; free-text entry for dates and names.
 - Every open question stays numbered until answered.
 
 A firm's own output rules replace these where they differ.
@@ -433,7 +433,7 @@ That last row matters: every Bill, Invoice, Credit Memo and Vendor Credit reads 
 ### Account & Entity Management Tools
 - `create_account` / `update_account` — Create or modify chart-of-accounts entries
 - `create_customer` / `get_customer` / `update_customer` — Manage customer records. **There is no delete**
-- `create_vendor` / `get_vendor` / `update_vendor` — Manage vendor records. **There is no delete**. Set `Vendor1099: true` and `TaxIdentifier` (the TIN/EIN) at creation for any contractor who may need a 1099 — both are ordinary fields on the vendor and both are accepted here. A contractor created without them looks correct all year and surfaces in January, when the 1099s do not generate and the payments have already been made. Ask for the TIN rather than guessing, and if it is not to hand, create the vendor and flag the missing TIN as an open item
+- `create_vendor` / `get_vendor` / `update_vendor` — Manage vendor records. **There is no delete**. Set `Vendor1099: true` at creation for any contractor who may need a 1099. A contractor created without it looks correct all year and surfaces in January, when the 1099s do not generate and the payments have already been made. Never ask for a TIN, EIN or SSN, and never pass one: a tax id typed into a chat is dropped and the reply says so. The TIN goes in the ledger from the vendor's W-9; `get_vendor` shows its type and last 4, so a 1099 vendor with none on file is an open item to flag
 - `create_employee` / `get_employee` / `update_employee` — Manage employee records (on Xero: `get_employee` reads Xero UK Payroll; create and update refuse)
 - `create_item` / `read_item` / `update_item` — Products and services used on invoices, bills, and purchases
 
