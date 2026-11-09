@@ -5,7 +5,7 @@ description: Executes month-end close, book audits, COA checks, payroll reconcil
 
 # NumbersGame Accounting — Bookkeeping Analysis Skill
 
-**Skill version: 2026.11.09.1**
+**Skill version: 2026.11.09.2**
 
 **Skill build: public**
 
