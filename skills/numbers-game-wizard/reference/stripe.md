@@ -89,8 +89,7 @@ payment on the invoice in the Stripe Dashboard.
 ### Acting in the client's Stripe
 
 `stripe_mark_invoice_uncollectible`, `stripe_void_invoice`, `stripe_create_customer`,
-`stripe_create_invoice`, `stripe_create_subscription`,
-`stripe_update_subscription`, `stripe_cancel_subscription`, and
+`stripe_create_invoice`, `stripe_cancel_subscription`, and
 `stripe_apply_outside_payment` all **preview first**: the first call changes
 nothing and returns a `confirm_token`. Show the preview, including what it means
 for the books, and call again with the token only after the person confirms.
@@ -100,10 +99,14 @@ read-only companies are refused.
 **Nothing here moves money.** No Stripe tool charges a card or bank, refunds,
 or turns on automatic charging; a person does those in the Stripe Dashboard.
 `stripe_create_invoice` always makes a DRAFT, never finalized or emailed: the
-person finalizes it in the Dashboard. `stripe_create_subscription` always bills
-by emailed invoice the customer pays (it needs `days_until_due`); to charge a
-saved card instead, the person switches it in the Dashboard
-(`stripe_payment_method_status` shows whether the customer has authorized one).
+person finalizes it in the Dashboard. **Subscriptions are created and changed in
+the Stripe Dashboard, never here.** Before the person does it, check it:
+`stripe_check_new_subscription` (a new one) or `stripe_check_subscription_change`
+(new prices or quantities) shows what Stripe will bill, Stripe's proration and
+what reaches the books, and flags unmapped prices and multi-month billing that
+needs a deferral. Fix what it flags; the person makes it in the Dashboard, and
+`stripe_list_subscriptions` with `expected_deals` confirms it
+(`stripe_payment_method_status` shows whether the customer has authorized a card).
 A subscription change is billed on the next regular invoice, never at once. A
 credit note's already-paid part goes to the customer's balance or is marked
 repaid outside Stripe; a refund is made in the Dashboard. On a subscription
