@@ -5,7 +5,7 @@ description: Executes month-end close, book audits, COA checks, payroll reconcil
 
 # NumbersGame Accounting — Bookkeeping Analysis Skill
 
-**Skill version: 2026.11.09.2**
+**Skill version: 2026.11.19.1**
 
 **Skill build: public**
 
@@ -145,6 +145,44 @@ the neighbouring sections if the answer continues there.
   settings to fill the gap.
 - Help search reads no ledger. It does not replace the version report or the scope
   questions once real work starts.
+
+---
+
+## When a NumbersGame tool fails
+
+`submit_feedback` is for things that are **broken**, not for things that could be nicer.
+Offer it only when one of these happened:
+
+- A tool **returned an error** that was not about the user's input or data, and retrying
+  did not help.
+- A tool **returned something wrong**: figures that contradict the ledger, records missing
+  that exist, a result that ignores an argument you passed.
+- The person's task **could not be completed** because no tool can do it, and they expected
+  NumbersGame to.
+- A refusal **blocked work the person is entitled to do**, and its message gave no way
+  forward.
+
+**Not** feedback:
+
+- Taking a few extra calls, paging, or a workaround that worked.
+- A filter or field that would be convenient.
+- Wording you would phrase differently.
+- A refusal that named its reason and a way forward: that is the product working.
+- Problems in the client's own books or data.
+- Anything the person could fix themselves in NumbersGame, QuickBooks or Xero.
+
+**When:** never mid-task. Finish or stop the task first. Then offer **once**, in one line,
+for example: "`search_bills` ignored the date range twice; shall I report that to
+NumbersGame?" No more than one offer per session, unless the person brings it up.
+
+**How:** if they agree, call the tool, show them the exact text it returns, and send it only
+on their yes. Say what failed: the tool, the arguments, what came back and what was
+expected. Leave out client names and amounts unless they are needed to show the failure.
+On the other connectors the tool carries the connector's prefix, for example
+`bill_submit_feedback`.
+
+If the person asks to send feedback themselves, send what they want, whether or not it
+meets the bar above.
 
 ---
 
@@ -548,6 +586,7 @@ Everyone in the firm can read its library; only an owner or admin can change it 
 - `search_classes` / `search_departments`
 - `search_accounts` — Chart-of-accounts lookup (also serves as the QBO connectivity check)
 - `search_help` / `get_help_article` — NumbersGame's own help center (SOPs, help pages, prompts, this skill), not the books. For "how do I…" questions; see **When the user asks how to use NumbersGame**
+- `submit_feedback`: reports to the NumbersGame team that a tool **failed or could not do the job**. Two calls: the first only shows the text; the second sends it after the person agrees. See **When a NumbersGame tool fails**
 - `get_purchase` / `get_deposit` / `get_transfer` / `get_journal_entry`
 - **To read many records, use one search, not many `get_` calls.** Pass their ids to that type's `search_` tool as `criteria: [{field: "Id", operator: "IN", value: [the ids]}]`, and make QuickBooks calls one at a time rather than in parallel: QuickBooks rate-limits a parallel burst (code 3001). Customer payments have no search tool; list them with `search_bank_transactions` on the account they were received into.
 
