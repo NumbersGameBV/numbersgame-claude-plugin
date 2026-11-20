@@ -43,7 +43,7 @@ file then has a **Ramp (read-only)** section naming the Ramp business and entity
   The receipt file stays in Ramp.
 - **No Ramp tools in the conversation?** The user has not connected Ramp in Claude
   yet: first the **Connectors** tab of the NumbersGame plugin in Claude, where
-  **NumbersGame – Ramp** is connected; without the plugin, a custom connector,
-  whose address is on the Setup page in NumbersGame.
+  **NumbersGame – Ramp** is connected; without the plugin, from Claude's connectors
+  directory (Customize → Connectors → Discover, NumbersGame – Ramp).
   A company without a Ramp section in its .md file is not linked to Ramp.
 - **Ramp accounts receivable** has no API: customer invoices are in the ledger only.
