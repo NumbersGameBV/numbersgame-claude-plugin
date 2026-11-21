@@ -11,4 +11,4 @@
 #
 # The matching ruleset ("protect main") is versioned in saginova-stack/serversetup,
 # github-rulesets/.
-*    @mjanssen19 @saginova-stack
+*    @mjanssen19 @saginova-stack @Daniel-NumbersGame
