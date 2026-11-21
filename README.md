@@ -42,13 +42,21 @@ Firms with their own NumbersGame Custom Skill install their firm's package from
   the chart of accounts.
 - **Client deliverables**: board reports, close reports and supporting memos,
   as PDF or Excel, and your firm's own report templates.
+- **Checks on request**: a health check of a client's books, budget against
+  actual, and a tie-out of a client's own workbook against the books.
+- **Company groups**: a consolidated P&L and balance sheet across a group's
+  companies, with intercompany items flagged rather than silently eliminated.
 - **Ramp (optional)**: read-only access to a client's Ramp business: bills,
   card transactions, reimbursements, receipts and approvals.
 - **Square (optional)**: books a client's Square sales and payouts into their
   ledger, and manages Square customers, invoices and subscriptions.
+- **Rillet (optional)**: works in a client's Rillet organisation, per entity
+  and consolidated: close, reports and aging, bills, invoices, credit memos and
+  vendor credits, journal entries, contracts, prepaid and other amortisation
+  schedules, budgets, bank matching, the close checklist and attachments.
 
 The skill tells Claude how to run these workflows. Reads and writes are
-separate tools. Any change inside Stripe or Square is shown as a preview and
+separate tools. Any change inside Stripe, Square or Rillet is shown as a preview and
 happens only after a person confirms it. Bank-feed lines are proposed for your
 approval unless your firm chooses to let rules post them, and imports are
 dry-run first so you see every line before anything is written.
@@ -57,11 +65,11 @@ dry-run first so you see every line before anything is written.
 
 | Component | What it is |
 |---|---|
-| `skills/numbers-game-wizard/` | The NumbersGame Wizard skill (`SKILL.md` and reference files for Xero, Stripe, Ramp and two long workflows). |
-| `.mcp.json` | Three remote MCP servers: `numbers-game` at `https://mcp.numbersgame.xyz/mcp` (QuickBooks Online, Xero, bank feed, Stripe), `numbers-game-ramp` at `https://ramp.numbersgame.xyz/mcp` (Ramp, read-only) and `numbers-game-square` at `https://square.numbersgame.xyz/mcp` (Square). |
+| `skills/numbers-game-wizard/` | The NumbersGame Wizard skill: `SKILL.md`, and reference files Claude opens when a job needs them: Xero, Rillet, Ramp, BILL, Brex, email and documents, Stripe, the full tool guide, and six workflows (vendor mapping, bank CSV import, budget against actual, books health check, workbook tie-out, group consolidation). |
+| `.mcp.json` | Four remote MCP servers: `numbers-game` at `https://mcp.numbersgame.xyz/mcp` (QuickBooks Online, Xero, bank feed, Stripe), `numbers-game-ramp` at `https://ramp.numbersgame.xyz/mcp` (Ramp, read-only), `numbers-game-square` at `https://square.numbersgame.xyz/mcp` (Square) and `numbers-game-rillet` at `https://rillet.numbersgame.xyz/mcp` (Rillet). |
 | `assets/icon.png` | Plugin icon. |
 
-All three servers are **remote**, reached over HTTPS (streamable HTTP). The plugin
+All four servers are **remote**, reached over HTTPS (streamable HTTP). The plugin
 starts no local processes and ships no `npx`, `uvx` or other launcher, so there
 are no package versions to pin. The plugin contains no scripts or other code.
 
@@ -73,9 +81,9 @@ access at any time in the NumbersGame dashboard. Which companies Claude can see,
 and whether it may change them, is decided by your firm's roles in NumbersGame:
 a viewer, or a company set to read-only, cannot write.
 
-The Ramp and Square servers only work for firms that have that integration
-switched on, and for companies with a Ramp business or Square account
-connected. Otherwise their tools say so and change nothing.
+The Ramp, Square and Rillet servers only work for firms that have that
+integration switched on, and for companies with a Ramp business, Square account
+or Rillet organisation connected. Otherwise their tools say so and change nothing.
 
 ## What data it sends, and to whom
 
@@ -85,7 +93,7 @@ The plugin itself collects nothing. Data moves only when Claude calls a tool:
   fills in (for example a company id, a date range, or the lines of a journal
   entry you asked for), plus your OAuth access token.
 - **From NumbersGame to your ledger and sources**: we call QuickBooks Online
-  (Intuit), Xero, Plaid (bank feeds), Stripe, Square and Ramp **on your firm's behalf**,
+  (Intuit), Xero, Rillet, Plaid (bank feeds), Stripe, Square and Ramp **on your firm's behalf**,
   only for the companies and sources your firm connected, and only as the tool
   call requires.
 - **Back to Claude**: the records and reports the tool returns, which may
@@ -107,10 +115,13 @@ What NumbersGame **keeps**:
   last four digits. Never full account numbers, balances or bank logins.
 - For Stripe and Square: the setup your firm chose and a record of what was
   booked, so nothing is booked twice.
+- For Rillet: the organisation and entities your firm linked, a record of each
+  change a person confirmed, and the ids of records Rillet reports as changed
+  (kept 400 days, never their contents).
 - OAuth tokens for your connected ledgers and sources, encrypted with
   AES-256-GCM.
 
-We do **not** copy your QuickBooks, Xero, Stripe, Square or Ramp records into
+We do **not** copy your QuickBooks, Xero, Rillet, Stripe, Square or Ramp records into
 our database, sell your data, or train AI models on it. Data is hosted in the
 EU (Oracle Cloud, Amsterdam).
 
