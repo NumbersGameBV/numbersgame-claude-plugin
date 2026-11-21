@@ -11,6 +11,10 @@
     "numbers-game-square": {
       "type": "http",
       "url": "https://square.numbersgame.xyz/mcp"
+    },
+    "numbers-game-rillet": {
+      "type": "http",
+      "url": "https://rillet.numbersgame.xyz/mcp"
     }
   }
 }

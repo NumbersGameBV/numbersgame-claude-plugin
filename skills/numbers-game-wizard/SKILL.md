@@ -1,11 +1,11 @@
 ---
 name: numbers-game-wizard
-description: QuickBooks Online and Xero bookkeeping through NumbersGame: close the month, weekly review, reconcile, audit, categorize transactions and code the bank feed, import or reverse a statement, journal entries, invoices (send, void, apply a credit), sales receipts, refund receipts, credit memos, purchase orders, bills, vendor credits, attachments, time tracking, reports, payroll and revenue recognition. Use when user says "NGWizard", "close the month", "catch me up", "board report", "COA review", "vendor mapping", "Rev Rec", "Xero", or asks for any QuickBooks or Xero task.
+description: QuickBooks Online, Xero and Rillet bookkeeping through NumbersGame: close the month, weekly review, reconcile, audit, categorize transactions and code the bank feed, import or reverse a statement, journal entries, invoices (send, void, apply a credit), sales receipts, refund receipts, credit memos, purchase orders, bills, vendor credits, attachments, time tracking, reports, payroll and revenue recognition. Use when user says "NGWizard", "close the month", "catch me up", "board report", "COA review", "vendor mapping", "Rev Rec", "Xero", or asks for any QuickBooks or Xero task.
 ---
 
 # NumbersGame Accounting — Bookkeeping Analysis Skill
 
-**Skill version: 2026.11.20.1**
+**Skill version: 2026.11.21.1**
 
 **Skill build: public**
 
@@ -297,18 +297,22 @@ no ledger connection of its own. It exists so that work spanning the entities
 (a combined P&L, a group summary) happens in one Claude project, with the
 group's own `.md` file holding the group rules.
 
-- **Only six tools take a `pc_` id:** `get_company_profile`,
-  `set_company_profile`, and the report-run tools (`start_report_run`,
-  `complete_report_run`, `get_report_run`, `list_report_runs`). Every other
-  tool refuses a group id and names the member companies to use instead. So
-  read and report per member company, then combine.
+- **Eight tools take a `pc_` id:** `get_company_profile`,
+  `set_company_profile`, the four report-run tools, `set_group_structure` and
+  `report_group_consolidated`. Every other tool refuses a group id and names
+  the member entities to use instead.
 - **Read the members from `get_company_profile` with the `pc_` id**, every
   session. Membership changes; do not work from a remembered list. It also
   says when a group mixes QuickBooks and Xero members, and what that limits.
-- **Combined is not consolidated.** Adding the entities together applies no
-  intercompany eliminations, and nothing in the ledgers knows the entities are
-  related. Say so on every combined figure. Apply eliminations only as the
-  group's rules describe them; never invent one.
+- **Consolidate with `report_group_consolidated`, never by adding up.** Pass
+  the group's `pc_` id. It reads every member on its own ledger (one set of
+  ledger reads per member), translates each into one reporting currency
+  (balance sheet at the closing rate, P&L at the average rate, the translation
+  difference as its own line) and returns each member next to the combined
+  total. Workflow 10 says what to relay. Intercompany balances are flagged,
+  never eliminated: apply eliminations only as the group's rules describe
+  them; never invent one. `set_group_structure` records which entity is the
+  parent and the intercompany accounts.
 
 ## Which ledger is this company on?
 
@@ -331,6 +335,12 @@ else to find that out. Say what you can do from that list rather than hedging.
 
 ---
 
+## Rillet (its own ledger connector)
+
+**If the realm_id begins with rillet_, or the company's .md file has a "Rillet" section, read [reference/rillet.md](reference/rillet.md) before any rillet_ tool.** Rillet is the ledger for that company, read and written through its own connector: the QuickBooks and Xero tools refuse it, and everything above about QuickBooks or Xero does not apply.
+
+---
+
 ## Ramp (a separate, read-only connector)
 
 **If the company's .md file has a "Ramp (read-only)" section, read [reference/ramp.md](reference/ramp.md) before answering anything about Ramp.** Ramp is read through its own connector, NumbersGame – Ramp: it is not the books, and nothing in Ramp can be changed from here.
@@ -348,6 +358,30 @@ else to find that out. Say what you can do from that list rather than hedging.
 **If the company's .md file has a "Brex (read-only)" section, or the user asks about a client's Brex, read [reference/brex.md](reference/brex.md) before any Brex tool.** Brex is read through its own connector: it is not the books, and nothing in Brex can be changed from here.
 
 ---
+
+## Square (a separate connector)
+
+Square is its own connection and subledger. Use the same company `realm_id`
+on it; `square_status` lists the Square accounts linked to it. Period totals
+reach the ledger as one proposed summary, booked after approval: never a
+ledger invoice or sales receipt per sale. Follow the Square server's own
+instructions and tool schemas.
+
+No Square tools in the conversation? Add the Square connector by hand,
+following the setup guide at /guide/square.
+
+## Shopify (a separate connector)
+
+Shopify is its own connection and subledger, in a pilot: only firms with the
+Shopify connector switched on have it. It only reads the store. Use the same
+company `realm_id`; `shopify_status` lists the stores linked to it. Period
+totals reach the ledger as one proposed journal, booked after approval: never
+a ledger invoice or sales receipt per order. Follow the Shopify server's own
+instructions and tool schemas.
+
+No Shopify tools in the conversation? Add the Shopify connector by hand,
+following the setup guide at /guide/shopify. A company without a Shopify
+section in its company file is not linked to Shopify.
 
 ## Email and documents (a separate connector)
 
@@ -420,6 +454,9 @@ QuickBooks applies, so use it instead of fetching everything.
 ### Failed account searches
 - If `search_accounts` returns nothing for an account you have strong evidence exists, you may call `create_account` directly as a fallback — but only with human approval, like any write.
 
+### Lock dates in previews
+- A dry run or preview can carry `lock_date`: the company's closing date (QuickBooks) or lock date (Xero), with a flag on each line dated on or before it. Before asking for approval, tell the user which lines are flagged and the earliest open date. QuickBooks refuses those lines; whether to re-date them or move the lock date is the user's call. A lock date that could not be read shows as unknown and blocks nothing.
+
 ---
 
 ## Available Tools
@@ -445,6 +482,11 @@ Every tool, by family. If a tool is named here, it is available on a QuickBooks 
 - **Slack Tools:** `refresh_client_canvas`
 - **Search & Lookup Tools:** `search_purchases`, `search_deposits`, `search_transfers`, `search_journal_entries`, `search_invoices`, `search_bills`, `search_customers`, `search_vendors`, `search_bill_payments`, `search_estimates`, `search_employees`, `search_items`, `search_sales_receipts`, `search_credit_memos`, `search_refund_receipts`, `search_purchase_orders`, `search_vendor_credits`, `search_bank_transactions`, `search_classes`, `search_departments`, `search_accounts`, `search_help`, `get_help_article`, `submit_feedback`, `get_purchase`, `get_deposit`, `get_transfer`, `get_journal_entry`
 - **Bank Feed Tools:** `list_plaid_items`, `list_plaid_accounts`, `refresh_live_bank_balance`, `plaid_sync_status`, `search_plaid_transactions`, `plaid_transactions_summary`, `propose_bank_coding`, `preview_bulk_classification`, `book_bank_transaction`, `bulk_book_bank_transactions`, `reverse_bank_booking`, `list_held_bank_transactions`, `get_booking_run`, `update_booking_run`, `post_booking_run`, `set_accounting_policy`, `mark_plaid_transaction_ignored`, `report_bank_booking_run`, `propose_never_billed_vendors`, `propose_descriptor_aliases`
+- **Group Tools:** `set_group_structure`, `report_group_consolidated`
+- **Close Record:** `record_close`
+- **Report Pages:** `build_report_page` (a finished HTML page for an Artifact)
+- **Xero 1099:** `report_1099` (Xero only)
+- **Stripe Tools:** `stripe_add_discount`, `stripe_adjust_customer_balance`, `stripe_apply_outside_payment`, `stripe_ar_aging`, `stripe_book_deferral_journal`, `stripe_book_payout`, `stripe_book_period_summary`, `stripe_book_revrec_journal`, `stripe_cancel_subscription`, `stripe_check_new_subscription`, `stripe_check_subscription_change`, `stripe_check_subscription_item`, `stripe_create_credit_note`, `stripe_create_customer`, `stripe_create_invoice`, `stripe_get_payout_breakdown`, `stripe_get_revenue_mappings`, `stripe_list_out_of_band_payments`, `stripe_list_payouts`, `stripe_list_products`, `stripe_list_subscriptions`, `stripe_mark_invoice_uncollectible`, `stripe_match_payment`, `stripe_onboarding_assess`, `stripe_opening_balances`, `stripe_pause_subscription`, `stripe_payment_method_status`, `stripe_propose_deferral_journal`, `stripe_propose_period_summary`, `stripe_propose_revrec_journal`, `stripe_provider_payable_report`, `stripe_remove_revenue_mapping`, `stripe_reverse_period_summary`, `stripe_revrec_mapping_csv`, `stripe_search_invoices`, `stripe_search_transactions`, `stripe_setup_accounts`, `stripe_status`, `stripe_tie_out`, `stripe_update_subscription_schedule`, `stripe_upsert_revenue_mapping`, `stripe_void_invoice`
 - **PDF Output Tools:** `qbo_generate_board_report`, `qbo_generate_close_report`, `qbo_generate_reconciliation_report`, `qbo_generate_issues_report`
 - **Attachment Tools:** `generate_attachment`, `request_attachment_upload`, `upload_attachable`, `get_attachments`
 - **Time Tracking:** `create_time_activity`
@@ -586,7 +628,7 @@ QuickBooks' own "For Review" queue — items its bank connection has downloaded
 but which nobody has categorised yet — is **not available through the public
 QuickBooks API, so not through NumbersGame**. If a user asks what is sitting
 uncategorised in QuickBooks, say plainly that it can be seen in the QuickBooks
-UI, and that Intuit's own QuickBooks Labs connector can read it. Do not
+UI, and that Intuit's own connector, Intuit QuickBooks Labs (beta), can read it. Do not
 substitute the register and do not guess at it.
 
 **A bank account fed both ways: Match, never Add.** If a bank account is connected to NumbersGame and also to QuickBooks' own bank feed, the same line can reach the books twice. In that QuickBooks queue (under Banking), **Match** each downloaded line to the entry NumbersGame already created. Never click **Add**: Add creates a second copy. Or turn off QuickBooks' bank feed for that account. On Xero, match the statement line to the entry NumbersGame created on the reconcile screen; do not Create a new one.
@@ -694,6 +736,23 @@ Apply these across all GL transactions for the period(s) under review.
 
 Never call a duplicate on amount alone. A bank purchase whose line is coded to a
 clearing account is a funding transfer, not a duplicate expense.
+
+---
+
+## Every reconciliation ends the same way
+
+Bank, card, statement, subledger or client workbook: every reconciliation and
+every tie-out ends with these four parts, in this order.
+
+1. **Matched**: the items found on both sides.
+2. **Unmatched, on each side**: what is in one and not in the other.
+3. **Timing**: items that clear in a later period, each with the date it
+   cleared or is expected to.
+4. **Remaining unexplained difference**: the amount nothing above explains.
+   State it even when it is 0.
+
+A read that failed is a gap, not 0. Name the gap; the unexplained difference is
+then unknown, and you say so.
 
 ---
 
@@ -833,6 +892,15 @@ fix or name it before generating.
 
 5. **Stakeholder Questions** (if requested) — see Stakeholder Questions Workflow
 
+### Step 8 — Record the close
+
+When the work is done and the deliverables are out, call `record_close` once:
+the period end, the checklist you worked, the issues found and fixed. It reads
+the trial balance, the basis and the closing date from the ledger itself, so
+pass no figures. Ask the accountant whether the client is closed for the
+period and pass the answer as `confirmed_closed`. A refusal names what to do
+first; follow it. It changes nothing in the ledger.
+
 ---
 
 ## Workflow 2: Full Audit (Multi-Period)
@@ -926,6 +994,30 @@ Lighter version, no full report required unless issues found.
 ## Workflow 6: Import a Bank CSV
 
 **The procedure is in [reference/workflow-bank-csv.md](reference/workflow-bank-csv.md).** Read it in full before touching a CSV import. It carries the reconciliation gate, the duplicate handling, `dry_run`, and the run id that `reverse_csv_import` needs — every one of which is a way to put wrong money into a client's books if it is skipped.
+
+---
+
+## Workflow 7: Explain a Budget Variance
+
+**The procedure is in [reference/workflow-budget-variance.md](reference/workflow-budget-variance.md).** Read it in full when the user asks why actuals differ from the budget, or asks for a variance report. It sets which lines are material and what each line must show.
+
+---
+
+## Workflow 8: Business Health Check
+
+**The procedure is in [reference/workflow-health-check.md](reference/workflow-health-check.md).** Read it in full when the user asks for a health check of a company, or asks how a business is doing. Every figure in it needs a period and a source.
+
+---
+
+## Workflow 9: Tie a Client Workbook to the Ledger
+
+**The procedure is in [reference/workflow-workbook-tie-out.md](reference/workflow-workbook-tie-out.md).** Read it in full when the user uploads a client schedule (fixed assets, accruals, prepaid or deferred revenue, loans) and asks whether it agrees with the books.
+
+---
+
+## Workflow 10: Consolidate a Company Group
+
+**The procedure is in [reference/workflow-group-consolidation.md](reference/workflow-group-consolidation.md).** Read it in full when the user asks for consolidated, combined or group-level figures for a company group.
 
 ---
 
