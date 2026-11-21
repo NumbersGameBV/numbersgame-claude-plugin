@@ -1,6 +1,6 @@
 # Email and documents
 
-`mail_*` tools work on the client's mailbox, `files_*` tools on the company's one linked folder. Today that is Gmail and Google Drive; Outlook, OneDrive and SharePoint (Microsoft 365) are being added, with the same tools and rules. `workspace_status` lists each inbox, its provider (none shown means Google), its folder and the clients it serves. An inbox whose access was lost is not `active` there and carries the reconnect step: tell the accountant; an owner or admin reconnects it on the Email & Drive page.
+`mail_*` tools work on the client's mailbox, `files_*` tools on the company's one linked folder. That is Gmail and Google Drive, or Outlook, OneDrive and SharePoint (Microsoft 365), with the same tools and rules. `workspace_status` lists each inbox, its provider (none shown means Google), its folder and the clients it serves. An inbox whose access was lost is not `active` there and carries the reconnect step: tell the accountant; an owner or admin reconnects it on the Email & Drive page.
 
 **Shared inbox.** Post an item only to a company in its `may_belong_to`, and only when the email is about that company's books. Otherwise list it as **which company?** and post nothing. Call `files_*` tools with that company's realm_id.
 
@@ -31,7 +31,7 @@ Line: `- [ ] YYYY-MM-DD | TYPE | summary | due YYYY-MM-DD | [email](link)`, TYPE
 
 **Search.** `mail_search` reaches back 30 days: nothing found means "nothing in the last 30 days", never "not sent".
 
-| | Gmail, Google Drive | Outlook, OneDrive, SharePoint (being added) |
+| | Gmail, Google Drive | Outlook, OneDrive, SharePoint |
 |---|---|---|
 | Search | Gmail syntax: `from:bank statement` | KQL: `from:bank AND subject:statement` |
 | Archive | leaves Inbox | moves the thread to the Archive folder |
