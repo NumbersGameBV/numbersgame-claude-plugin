@@ -42,13 +42,18 @@ Firms with their own NumbersGame Custom Skill install their firm's package from
   the chart of accounts.
 - **Client deliverables**: board reports, close reports and supporting memos,
   as PDF or Excel, and your firm's own report templates.
+- **Checks on request**: a health check of a client's books, budget against
+  actual, and a tie-out of a client's own workbook against the books.
+- **Company groups**: a consolidated P&L and balance sheet across a group's
+  companies, with intercompany items flagged rather than silently eliminated.
 - **Ramp (optional)**: read-only access to a client's Ramp business: bills,
   card transactions, reimbursements, receipts and approvals.
 - **Square (optional)**: books a client's Square sales and payouts into their
   ledger, and manages Square customers, invoices and subscriptions.
 - **Rillet (optional)**: works in a client's Rillet organisation, per entity
-  and consolidated: close, reports and aging, bills, invoices, journal entries,
-  contracts, bank matching, the close checklist and attachments.
+  and consolidated: close, reports and aging, bills, invoices, credit memos and
+  vendor credits, journal entries, contracts, prepaid and other amortisation
+  schedules, budgets, bank matching, the close checklist and attachments.
 
 The skill tells Claude how to run these workflows. Reads and writes are
 separate tools. Any change inside Stripe, Square or Rillet is shown as a preview and
@@ -60,7 +65,7 @@ dry-run first so you see every line before anything is written.
 
 | Component | What it is |
 |---|---|
-| `skills/numbers-game-wizard/` | The NumbersGame Wizard skill (`SKILL.md` and reference files for Xero, Rillet, Stripe, Ramp and two long workflows). |
+| `skills/numbers-game-wizard/` | The NumbersGame Wizard skill: `SKILL.md`, and reference files Claude opens when a job needs them: Xero, Rillet, Ramp, BILL, Brex, email and documents, Stripe, the full tool guide, and six workflows (vendor mapping, bank CSV import, budget against actual, books health check, workbook tie-out, group consolidation). |
 | `.mcp.json` | Four remote MCP servers: `numbers-game` at `https://mcp.numbersgame.xyz/mcp` (QuickBooks Online, Xero, bank feed, Stripe), `numbers-game-ramp` at `https://ramp.numbersgame.xyz/mcp` (Ramp, read-only), `numbers-game-square` at `https://square.numbersgame.xyz/mcp` (Square) and `numbers-game-rillet` at `https://rillet.numbersgame.xyz/mcp` (Rillet). |
 | `assets/icon.png` | Plugin icon. |
 
