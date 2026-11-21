@@ -38,7 +38,7 @@ same months a year earlier where the books go back that far.
      accounts (`qbo_report_trial_balance`), and held bank lines
      (`list_held_bank_transactions`) when the company has a bank feed.
    - Unapplied credits: credit memos and vendor credits with an open balance
-     (`search_credit_memos` and `search_vendor_credits`, filtered on Balance).
+     (`search_credit_memos` filtered on Balance; `search_vendor_credits` takes no Balance filter on QuickBooks, so list them and keep those whose `Balance` is above 0).
    - Stale open items: invoices and bills open more than 90 days (the aging
      reports and `list_overdue_invoices`).
 
