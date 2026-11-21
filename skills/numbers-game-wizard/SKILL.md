@@ -5,7 +5,7 @@ description: QuickBooks Online, Xero and Rillet bookkeeping through NumbersGame:
 
 # NumbersGame Accounting — Bookkeeping Analysis Skill
 
-**Skill version: 2026.11.21.2**
+**Skill version: 2026.11.21.3**
 
 **Skill build: public**
 
