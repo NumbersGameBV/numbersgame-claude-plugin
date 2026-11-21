@@ -1,11 +1,11 @@
 ---
 name: numbers-game-wizard
-description: QuickBooks Online, Xero and Rillet bookkeeping through NumbersGame: close the month, weekly review, reconcile, audit, categorize transactions and code the bank feed, import or reverse a statement, journal entries, invoices (send, void, apply a credit), sales receipts, refund receipts, credit memos, purchase orders, bills, vendor credits, attachments, time tracking, reports, payroll and revenue recognition. Use when user says "NGWizard", "close the month", "catch me up", "board report", "COA review", "vendor mapping", "Rev Rec", "Xero", or asks for any QuickBooks or Xero task.
+description: QuickBooks Online, Xero and Rillet bookkeeping through NumbersGame: close the month, weekly review, reconcile, audit, categorize transactions and code the bank feed, import or reverse a statement, journal entries, invoices (send, void, apply a credit), sales receipts, refund receipts, credit memos, purchase orders, bills, vendor credits, what's attached, time tracking, reports, payroll and revenue recognition schedules. Use when user says "NGWizard", "close the month", "catch me up", "board report", "COA review", "vendor mapping", "Rev Rec", "Xero", or asks for any QuickBooks or Xero task.
 ---
 
 # NumbersGame Accounting — Bookkeeping Analysis Skill
 
-**Skill version: 2026.11.21.1**
+**Skill version: 2026.11.21.2**
 
 **Skill build: public**
 
@@ -49,7 +49,7 @@ full**, then do what it says. For a company it asks you to call
 `get_company_file` and replace this project's company file yourself: save the
 file exactly as returned, under the filename it gives, replacing the old one.
 Only if you cannot write to this project does it name the person who can fix
-it — and for an entity group, which has no such tool, it always does.
+it — and for a company group, which has no such tool, it always does.
 
 If the reply carries `version_request`, you did not send `skill_version`.
 Send it on your very next `get_company_profile` call — the label is on the
@@ -70,7 +70,7 @@ because we checked and found nothing, or because you did not give us what the
 check needs — and only you can tell which. If you did not send a version, say
 that, not that everything is up to date.
 
-Working on an entity group rather than one company? Same call, with the group's
+Working on a company group rather than one company? Same call, with the group's
 `pc_...` id as `realm_id` and the version from the group's own `.md`.
 
 ---
@@ -234,7 +234,7 @@ NumbersGame?" No more than one offer per session, unless the person brings it up
 on their yes. Say what failed: the tool, the arguments, what came back and what was
 expected. Leave out client names and amounts unless they are needed to show the failure.
 On the other connectors the tool carries the connector's prefix, for example
-`bill_submit_feedback` or `google_submit_feedback`.
+`bill_submit_feedback` or `workspace_submit_feedback`.
 
 If the person asks to send feedback themselves, send what they want, whether or not it
 meets the bar above.
@@ -289,21 +289,43 @@ above applies. Say nothing about it.
 
 ---
 
-## Entity groups (parent companies)
+## Company groups
 
-A firm can put several connected companies under a **parent company**: an
-entity group with an id of the form `pc_` followed by 12 hex characters, and
-no ledger connection of its own. It exists so that work spanning the entities
-(a combined P&L, a group summary) happens in one Claude project, with the
-group's own `.md` file holding the group rules.
+A firm can put several connected companies in a **company group**: an id of
+the form `pc_` followed by 12 hex characters, with no ledger connection of its
+own. It exists so that work spanning the companies (a consolidated P&L, a
+group summary) happens in one Claude project, with the group's own `.md` file
+holding the group rules. Within a group, the **parent company** is one member,
+the holding entity; the other members are its **subsidiaries**. The group is
+never the parent company: pass its `pc_` id only where a tool says it takes
+one.
 
 - **Eight tools take a `pc_` id:** `get_company_profile`,
   `set_company_profile`, the four report-run tools, `set_group_structure` and
   `report_group_consolidated`. Every other tool refuses a group id and names
-  the member entities to use instead.
-- **Read the members from `get_company_profile` with the `pc_` id**, every
-  session. Membership changes; do not work from a remembered list. It also
-  says when a group mixes QuickBooks and Xero members, and what that limits.
+  the member companies to use instead.
+- **Read the group from `get_company_profile` with the `pc_` id**, every
+  session. Membership changes; do not work from a remembered list. It returns
+  each company with its ledger and, once a parent is marked, its `role`
+  (`parent` or `subsidiary`); `parent_company` (null until someone marks it);
+  and `intercompany_accounts` per subsidiary: due to/from the parent in the
+  subsidiary's books, due from/to the subsidiary and the investment in the
+  parent's books. It also says when a group mixes QuickBooks and Xero
+  companies, and what that limits. On one member company, the same tool
+  returns `company_group` (the group's id, name and that company's role).
+- **Set the structure with `set_group_structure`, only after the user
+  confirms it.** Read the group first, find each account with
+  `search_accounts` on that company's own realm_id, show the user which
+  company is the parent and which accounts pair up, and record them once they
+  say yes. Changing the parent deletes the existing pairs: send the new pairs
+  in the same call.
+- **Tie out the intercompany balances** per pair: read the subsidiary's
+  account on the subsidiary's realm_id and the parent's accounts on the
+  parent's realm_id, as of the same date (trial balance or balance sheet). The
+  two due balances should be equal and opposite. A difference is a lead to
+  explain with both figures, never something to post away. Companies in
+  different currencies are reported side by side, each in its own currency,
+  never converted to make them meet.
 - **Consolidate with `report_group_consolidated`, never by adding up.** Pass
   the group's `pc_` id. It reads every member on its own ledger (one set of
   ledger reads per member), translates each into one reporting currency
@@ -311,8 +333,7 @@ group's own `.md` file holding the group rules.
   difference as its own line) and returns each member next to the combined
   total. Workflow 10 says what to relay. Intercompany balances are flagged,
   never eliminated: apply eliminations only as the group's rules describe
-  them; never invent one. `set_group_structure` records which entity is the
-  parent and the intercompany accounts.
+  them; never invent one.
 
 ## Which ledger is this company on?
 
